@@ -1,0 +1,25 @@
+{
+  "name": "嘉怡珠宝",
+  "appid": "wxff03445f8c883241",
+  "description": "嘉怡珠宝商城",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "app-plus": {},
+  "quickapp": {},
+  "mp-weixin": {
+    "appid": "wxff03445f8c883241",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "postcss": true,
+      "minified": true
+    },
+    "usingComponents": true,
+    "permission": {}
+  },
+  "uniStatistics": {
+    "enable": false
+  },
+  "vueVersion": "3"
+}

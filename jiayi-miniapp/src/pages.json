@@ -1,0 +1,61 @@
+{
+  "pages": [
+    {"path": "pages/index/index", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/category/category", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/discovery/discovery", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/cart/cart", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/my/my", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/activity/list", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/activity/new", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/auction/index", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/ai-wear/index", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/points/index", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/product/detail", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/member/index", "style": {"navigationStyle": "custom"}}
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "嘉怡珠宝",
+    "navigationBarBackgroundColor": "#FCF9F8",
+    "backgroundColor": "#FAFAF8"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#605E5A",
+    "selectedColor": "#775836",
+    "backgroundColor": "#FCF9F8",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/tab/home.png",
+        "selectedIconPath": "static/tab/home-active.png"
+      },
+      {
+        "pagePath": "pages/category/category",
+        "text": "分类",
+        "iconPath": "static/tab/category.png",
+        "selectedIconPath": "static/tab/category-active.png"
+      },
+      {
+        "pagePath": "pages/discovery/discovery",
+        "text": "发现",
+        "iconPath": "static/tab/discovery.png",
+        "selectedIconPath": "static/tab/discovery-active.png"
+      },
+      {
+        "pagePath": "pages/cart/cart",
+        "text": "购物车",
+        "iconPath": "static/tab/cart.png",
+        "selectedIconPath": "static/tab/cart-active.png"
+      },
+      {
+        "pagePath": "pages/my/my",
+        "text": "我的",
+        "iconPath": "static/tab/my.png",
+        "selectedIconPath": "static/tab/my-active.png"
+      }
+    ]
+  }
+}

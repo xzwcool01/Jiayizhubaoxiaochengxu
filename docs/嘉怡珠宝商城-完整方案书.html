@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>嘉怡珠宝商城 - 项目方案书（完整版）</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #FAFAF8;
+            color: #1A1A1A;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #C8A27A 0%, #A67B52 50%, #8B6540 100%);
+            padding: 48px 24px 40px;
+            text-align: center;
+            color: #fff;
+        }
+        .hero h1 { font-size: 28px; font-weight: 700; letter-spacing: 2px; margin-bottom: 8px; }
+        .hero .subtitle { font-size: 14px; opacity: 0.9; letter-spacing: 4px; }
+        .hero .badge { display: inline-block; margin-top: 16px; padding: 4px 16px; border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; font-size: 12px; opacity: 0.85; }
+        .hero .nav-info { margin-top: 20px; display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
+        .hero .nav-info span { background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 16px; font-size: 12px; }
+
+        .container { padding: 20px 16px 40px; max-width: 800px; margin: 0 auto; }
+
+        .section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #C8A27A;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #F5F0EB;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section .desc { font-size: 14px; color: #555; margin-bottom: 12px; }
+
+        .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+        .tag {
+            background: #F5F0EB;
+            color: #A67B52;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* ===== Phone Mockup ===== */
+        .phone-wrapper {
+            display: flex;
+            justify-content: center;
+            margin: 16px 0;
+        }
+        .phone {
+            width: 300px;
+            min-height: 540px;
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            overflow: hidden;
+            border: 1px solid #E0D8D0;
+            position: relative;
+        }
+        .phone .status-bar {
+            background: inherit;
+            padding: 8px 16px 4px;
+            font-size: 11px;
+            color: #1A1A1A;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+        .phone .header {
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #F0F0F0;
+        }
+        .phone .header .title { font-size: 14px; font-weight: 600; }
+        .phone .header .left, .phone .header .right { font-size: 16px; color: #999; }
+        .phone .body { padding: 10px 12px; font-size: 11px; line-height: 1.5; color: #555; }
+        .phone .body .placeholder-img {
+            background: linear-gradient(135deg, #F5F0EB, #E8E0D8);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #B8A898;
+            font-size: 11px;
+        }
+        .phone .tab-bar {
+            display: flex;
+            border-top: 1px solid #F0F0F0;
+            background: #fff;
+            padding: 4px 0 8px;
+            position: sticky;
+            bottom: 0;
+        }
+        .phone .tab-bar .tab {
+            flex: 1;
+            text-align: center;
+            font-size: 10px;
+            color: #999;
+        }
+        .phone .tab-bar .tab.active { color: #C8A27A; }
+        .phone .tab-bar .tab .i { font-size: 16px; display: block; margin-bottom: 1px; }
+
+        .flow-steps { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+        .flow-step { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        .flow-step .sn {
+            width: 20px; height: 20px;
+            background: #C8A27A; color: #fff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 600;
+            flex-shrink: 0;
+        }
+        .flow-step .ar { color: #C8A27A; font-size: 14px; flex-shrink: 0; }
+
+        .highlight-num { font-size: 24px; font-weight: 700; color: #C8A27A; }
+        .text-muted { color: #888; font-size: 13px; }
+
+        .ai-box {
+            background: linear-gradient(135deg, #F8F6F4, #F0E8DE);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 8px;
+        }
+
+        .page-index {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+        .page-index a {
+            display: inline-block;
+            padding: 6px 14px;
+            background: #F5F0EB;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #A67B52;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .page-index a:hover { background: #C8A27A; color: #fff; }
+
+        .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .feature-item {
+            background: #F8F6F4; border-radius: 8px; padding: 12px 10px; text-align: center;
+        }
+        .feature-item .fi-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+        .feature-item .fi-title { font-size: 12px; font-weight: 600; }
+        .feature-item .fi-desc { font-size: 11px; color: #888; margin-top: 2px; }
+
+        .feature-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 8px; }
+        .feature-item-s {
+            background: #F8F6F4; border-radius: 8px; padding: 10px 6px; text-align: center;
+        }
+        .feature-item-s .fi-icon { font-size: 20px; display: block; }
+        .feature-item-s .fi-title { font-size: 11px; margin-top: 2px; }
+
+        .divider {
+            text-align: center; margin: 16px 0 12px; position: relative;
+        }
+        .divider::before {
+            content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 1px; background: #E8E0D8;
+        }
+        .divider span {
+            background: #FAFAF8; padding: 0 12px; font-size: 12px; color: #C8A27A; position: relative; font-weight: 500;
+        }
+
+        .btn-gold {
+            display: inline-block;
+            background: #C8A27A;
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        @media (max-width: 640px) {
+            .phone { width: 100%; min-height: auto; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .feature-grid-3 { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="hero">
+    <h1>嘉怡珠宝</h1>
+    <div class="subtitle">微信小程序商城 · 完整项目方案书</div>
+    <div class="badge">版本 V1.0 · 2026年7月</div>
+    <div class="nav-info">
+        <span>🏠 首页</span> <span>📂 分类</span> <span>🌟 发现</span>
+        <span>💎 会员</span> <span>👤 我的</span> <span>🛒 购物车</span>
+        <span>📄 详情</span> <span>🔨 拍卖</span> <span>🤖 AI穿戴</span>
+    </div>
+</div>
+
+<!-- ⚠️ 重要提示：原型说明 -->
+<div style="margin: 12px 16px 0; background: #FFF8F0; border: 1px solid #E8D5C0; border-radius: 10px; padding: 12px 14px; max-width: 800px; margin-left: auto; margin-right: auto;">
+    <div style="display: flex; align-items: flex-start; gap: 8px;">
+        <span style="font-size: 20px; line-height: 1;">⚠️</span>
+        <div>
+            <div style="font-size: 13px; font-weight: 600; color: #8B6540;">重要说明：本方案书中的页面为布局原型示意</div>
+            <div style="font-size: 12px; color: #A67B52; margin-top: 4px;">
+                以下所有页面为<strong>线框图级别原型</strong>，仅展示页面结构、功能模块和交互逻辑。<br>
+                <strong>最终上线版本将在原型基础上进行专业UI视觉设计</strong>，包括：精致珠宝摄影图、细腻光影效果、品牌定制字体、微动效交互动画等，整体视觉效果将远优于当前原型示意。
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- ===== 目录 ===== -->
+    <div class="section">
+        <div class="section-title"><span>📑</span> 页面目录</div>
+        <div class="page-index">
+            <a href="#p1">🏠 首页</a>
+            <a href="#p2">📂 分类页</a>
+            <a href="#p3">🌟 发现页</a>
+            <a href="#p4">💎 会员页</a>
+            <a href="#p5">👤 我的</a>
+            <a href="#p6">📄 商品详情</a>
+            <a href="#p7">🛒 购物车</a>
+            <a href="#p8">💳 结算页</a>
+            <a href="#p9">🔨 限时拍卖</a>
+            <a href="#p10">🎉 活动页</a>
+            <a href="#p11">🤖 AI穿戴</a>
+            <a href="#p12">🎁 积分商城</a>
+            <a href="#p13">📋 订单列表</a>
+            <a href="#p14">🔍 搜索页</a>
+            <a href="#p15">🖥️ 后台管理</a>
+        </div>
+    </div>
+
+    <!-- 概况 -->
+    <div class="section">
+        <div class="section-title"><span>💎</span> 项目概况</div>
+        <p style="margin-bottom:10px;"><strong>项目名称</strong>：嘉怡珠宝微信小程序商城<br>
+        <strong>目标用户</strong>：25-45岁女性，追求生活品质<br>
+        <strong>设计风格</strong>：轻奢简约，玫瑰金主色调 + 白色留白<br>
+        <strong>技术栈</strong>：uni-app + Spring Boot + MySQL + 腾讯云</p>
+        <div style="display:flex; gap:12px; text-align:center; justify-content:space-around; padding:8px 0;">
+            <div><div class="highlight-num">14</div><div class="text-muted">小程序页面</div></div>
+            <div><div class="highlight-num">10</div><div class="text-muted">管理模块</div></div>
+            <div><div class="highlight-num">25</div><div class="text-muted">数据库表</div></div>
+            <div><div class="highlight-num">12</div><div class="text-muted">开发周</div></div>
+        </div>
+        <p style="font-size:13px; color:#888; margin-top:6px;">底部Tab导航：首页 · 分类 · 发现 · 会员 · 我的</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 1: 首页 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p1">
+        <div class="section-title"><span>🏠</span> 首页</div>
+        <p class="desc">首页是用户进入小程序的第一屏，需要营造高级感的同时高效传递信息。整体采用"Banner轮播 + 图标导航 + 限时抢购 + 热门推荐"的经典电商布局。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header">
+                    <span style="font-weight:700;color:#C8A27A;font-size:16px;">嘉怡珠宝</span>
+                    <span style="font-size:16px;">🔍</span>
+                </div>
+                <div class="body">
+                    <!-- Banner -->
+                    <div class="placeholder-img" style="height:110px;border-radius:8px;margin-bottom:8px;">
+                        <span>📷 活动Banner轮播（3-5张）</span>
+                    </div>
+                    <!-- Icon Grid -->
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;">
+                        <div style="text-align:center;"><div style="background:#F5F0EB;width:36px;height:36px;border-radius:50%;margin:0 auto 2px;display:flex;align-items:center;justify-content:center;font-size:16px;">🔥</div><span style="font-size:9px;">限时活动</span></div>
+                        <div style="text-align:center;"><div style="background:#F5F0EB;width:36px;height:36px;border-radius:50%;margin:0 auto 2px;display:flex;align-items:center;justify-content:center;font-size:16px;">🏆</div><span style="font-size:9px;">限时拍卖</span></div>
+                        <div style="text-align:center;"><div style="background:#F5F0EB;width:36px;height:36px;border-radius:50%;margin:0 auto 2px;display:flex;align-items:center;justify-content:center;font-size:16px;">🆕</div><span style="font-size:9px;">新品上市</span></div>
+                        <div style="text-align:center;"><div style="background:#F5F0EB;width:36px;height:36px;border-radius:50%;margin:0 auto 2px;display:flex;align-items:center;justify-content:center;font-size:16px;">✨</div><span style="font-size:9px;">AI穿戴</span></div>
+                        <div style="text-align:center;"><div style="background:#F5F0EB;width:36px;height:36px;border-radius:50%;margin:0 auto 2px;display:flex;align-items:center;justify-content:center;font-size:16px;">🎁</div><span style="font-size:9px;">积分商城</span></div>
+                        <div style="text-align:center;"><div style="background:#F5F0EB;width:36px;height:36px;border-radius:50%;margin:0 auto 2px;display:flex;align-items:center;justify-content:center;font-size:16px;">🔥</div><span style="font-size:9px;">热门推荐</span></div>
+                    </div>
+                    <!-- Flash Sale -->
+                    <div style="margin-bottom:8px;">
+                        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:4px;">
+                            <span>⏱ 限时抢购</span>
+                            <span style="color:#C8A27A;">02:15:30 更多 &gt;</span>
+                        </div>
+                        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;">
+                            <div style="min-width:90px;"><div class="placeholder-img" style="height:70px;">商品</div><span style="font-size:9px;">¥1,280</span></div>
+                            <div style="min-width:90px;"><div class="placeholder-img" style="height:70px;">商品</div><span style="font-size:9px;">¥2,560</span></div>
+                            <div style="min-width:90px;"><div class="placeholder-img" style="height:70px;">商品</div><span style="font-size:9px;">¥890</span></div>
+                        </div>
+                    </div>
+                    <!-- Hot Picks -->
+                    <div>
+                        <div style="font-size:11px;font-weight:600;margin-bottom:4px;">🔥 热门推荐</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                            <div><div class="placeholder-img" style="height:100px;">商品图</div><span style="font-size:9px;">璀璨星辰钻戒</span><br><span style="font-size:10px;color:#C8A27A;font-weight:600;">¥3,580</span></div>
+                            <div><div class="placeholder-img" style="height:100px;">商品图</div><span style="font-size:9px;">优雅金项链</span><br><span style="font-size:10px;color:#C8A27A;font-weight:600;">¥5,280</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-bar">
+                    <div class="tab active"><span class="i">🏠</span>首页</div>
+                    <div class="tab"><span class="i">📂</span>分类</div>
+                    <div class="tab"><span class="i">🌟</span>发现</div>
+                    <div class="tab"><span class="i">💎</span>会员</div>
+                    <div class="tab"><span class="i">👤</span>我的</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tag-list" style="margin-top:10px;">
+            <span class="tag">Banner轮播</span>
+            <span class="tag">2行×3列图标</span>
+            <span class="tag">限时抢购横向滑动</span>
+            <span class="tag">双列瀑布流</span>
+            <span class="tag">后台全部可配</span>
+        </div>
+        <p style="font-size:13px;color:#666;margin-top:6px;"><strong>交互要点</strong>：Banner自动轮播3秒 · 图标点击跳转对应模块 · 限时抢购横向滑动 · 下拉加载更多商品 · 点击商品进入详情</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 2: 分类页 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p2">
+        <div class="section-title"><span>📂</span> 分类页</div>
+        <p class="desc">左侧分类导航树 + 右侧商品展示区，用户可快速筛选商品。支持多级分类、价格排序、销量排序。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header">
+                    <span class="left">◀</span>
+                    <span class="title">分类</span>
+                    <span class="right">🔍</span>
+                </div>
+                <div class="body" style="display:flex;gap:8px;padding:8px 8px;min-height:380px;">
+                    <div style="width:64px;flex-shrink:0;">
+                        <div style="background:#F8F6F4;padding:5px 4px;font-size:10px;text-align:center;color:#C8A27A;font-weight:600;border-radius:4px;">全部</div>
+                        <div style="padding:5px 4px;font-size:10px;text-align:center;color:#888;">💍 戒指</div>
+                        <div style="padding:5px 4px;font-size:10px;text-align:center;color:#888;">📿 项链</div>
+                        <div style="padding:5px 4px;font-size:10px;text-align:center;color:#888;">🔗 手链</div>
+                        <div style="padding:5px 4px;font-size:10px;text-align:center;color:#888;">💎 耳饰</div>
+                        <div style="padding:5px 4px;font-size:10px;text-align:center;color:#888;">⭕ 手镯</div>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="display:flex;gap:6px;font-size:9px;color:#888;margin-bottom:6px;">
+                            <span style="color:#C8A27A;font-weight:600;">综合</span>
+                            <span>销量</span>
+                            <span>价格↑</span>
+                            <span>新品</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                            <div><div class="placeholder-img" style="height:80px;">钻戒</div><span style="font-size:9px;">六爪钻戒</span><br><span style="font-size:9px;color:#C8A27A;">¥6,800</span></div>
+                            <div><div class="placeholder-img" style="height:80px;">钻戒</div><span style="font-size:9px;">求婚钻戒</span><br><span style="font-size:9px;color:#C8A27A;">¥12,800</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-bar">
+                    <div class="tab"><span class="i">🏠</span>首页</div>
+                    <div class="tab active"><span class="i">📂</span>分类</div>
+                    <div class="tab"><span class="i">🌟</span>发现</div>
+                    <div class="tab"><span class="i">💎</span>会员</div>
+                    <div class="tab"><span class="i">👤</span>我的</div>
+                </div>
+            </div>
+        </div>
+
+        <p style="font-size:13px;color:#666;margin-top:6px;"><strong>交互要点</strong>：左侧分类点击切换 · 右侧筛选排序 · 支持多级分类（如 戒指→钻戒/对戒） · 点击商品进详情</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 3: 发现页 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p3">
+        <div class="section-title"><span>🌟</span> 发现页</div>
+        <p class="desc">内容社区模块，三个Tab切换：AI穿搭秀、珠宝指南、达人晒单。增强用户粘性和社交互动。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header">
+                    <span class="left"></span>
+                    <span class="title">发现</span>
+                    <span class="right"></span>
+                </div>
+                <div style="display:flex;padding:6px 16px;border-bottom:1px solid #F0F0F0;">
+                    <span style="flex:1;text-align:center;font-size:11px;font-weight:600;color:#C8A27A;border-bottom:2px solid #C8A27A;padding-bottom:4px;">AI穿搭秀</span>
+                    <span style="flex:1;text-align:center;font-size:11px;color:#999;">珠宝指南</span>
+                    <span style="flex:1;text-align:center;font-size:11px;color:#999;">达人晒单</span>
+                </div>
+                <div class="body">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                        <div><div class="placeholder-img" style="height:120px;">AI穿搭</div><div style="font-size:9px;display:flex;justify-content:space-between;padding:2px 4px;"><span>❤️ 128</span><span>💬 23</span></div></div>
+                        <div><div class="placeholder-img" style="height:140px;">AI穿搭</div><div style="font-size:9px;display:flex;justify-content:space-between;padding:2px 4px;"><span>❤️ 86</span><span>💬 15</span></div></div>
+                        <div><div class="placeholder-img" style="height:130px;">AI穿搭</div><div style="font-size:9px;display:flex;justify-content:space-between;padding:2px 4px;"><span>❤️ 52</span><span>💬 8</span></div></div>
+                        <div><div class="placeholder-img" style="height:110px;">AI穿搭</div><div style="font-size:9px;display:flex;justify-content:space-between;padding:2px 4px;"><span>❤️ 203</span><span>💬 41</span></div></div>
+                    </div>
+                </div>
+                <div class="tab-bar">
+                    <div class="tab"><span class="i">🏠</span>首页</div>
+                    <div class="tab"><span class="i">📂</span>分类</div>
+                    <div class="tab active"><span class="i">🌟</span>发现</div>
+                    <div class="tab"><span class="i">💎</span>会员</div>
+                    <div class="tab"><span class="i">👤</span>我的</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-grid-3" style="margin-top:10px;">
+            <div class="feature-item-s"><span class="fi-icon">🤖</span><div class="fi-title">AI穿搭秀</div><span style="font-size:10px;color:#888;">用户生成分享</span></div>
+            <div class="feature-item-s"><span class="fi-icon">📖</span><div class="fi-title">珠宝指南</div><span style="font-size:10px;color:#888;">内容文章</span></div>
+            <div class="feature-item-s"><span class="fi-icon">📸</span><div class="fi-title">达人晒单</div><span style="font-size:10px;color:#888;">买家秀</span></div>
+        </div>
+        <p style="font-size:13px;color:#666;margin-top:6px;"><strong>交互要点</strong>：Tab切换 · 瀑布流展示 · 点赞评论互动 · 点击查看大图</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 4: 会员页 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p4">
+        <div class="section-title"><span>💎</span> 会员页</div>
+        <p class="desc">展示会员等级和权益，激励用户消费升级。包含会员卡片、签到入口、权益列表和AI穿戴剩余次数。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header">
+                    <span class="left"></span>
+                    <span class="title">会员中心</span>
+                    <span class="right"></span>
+                </div>
+                <div class="body">
+                    <!-- Member Card -->
+                    <div style="background:linear-gradient(135deg,#C8A27A,#A67B52);border-radius:10px;padding:16px;color:#fff;margin-bottom:10px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:14px;font-weight:600;">👤 会员昵称</span>
+                            <span style="background:rgba(255,255,255,0.2);padding:2px 10px;border-radius:12px;font-size:10px;">💎 钻石会员</span>
+                        </div>
+                        <div style="margin-top:8px;font-size:11px;">当前积分 <strong style="font-size:16px;">3,580</strong></div>
+                        <div style="background:rgba(255,255,255,0.2);border-radius:4px;height:6px;margin-top:4px;overflow:hidden;">
+                            <div style="width:72%;height:100%;background:#fff;border-radius:4px;"></div>
+                        </div>
+                        <div style="font-size:10px;margin-top:2px;opacity:0.8;">距离黄金会员还需 420 积分</div>
+                    </div>
+                    <!-- Check-in -->
+                    <div style="background:#F8F6F4;border-radius:8px;padding:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:12px;">📅 每日签到</span>
+                        <span style="background:#C8A27A;color:#fff;padding:4px 16px;border-radius:16px;font-size:11px;">签到 +5</span>
+                    </div>
+                    <!-- Benefits -->
+                    <div style="font-size:11px;font-weight:600;margin-bottom:6px;">会员权益</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+                        <div style="background:#F8F6F4;border-radius:6px;padding:8px;text-align:center;font-size:10px;">✨ AI穿戴 10次/天</div>
+                        <div style="background:#F8F6F4;border-radius:6px;padding:8px;text-align:center;font-size:10px;">🚚 免邮特权</div>
+                        <div style="background:#F8F6F4;border-radius:6px;padding:8px;text-align:center;font-size:10px;">🎂 生日礼遇</div>
+                        <div style="background:#F8F6F4;border-radius:6px;padding:8px;text-align:center;font-size:10px;">💬 专属客服</div>
+                    </div>
+                    <!-- AI Wear Count -->
+                    <div style="background:#F0E8DE;border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:11px;">🤖 今日AI穿戴剩余</span>
+                        <span style="font-size:13px;font-weight:600;color:#C8A27A;">3/10 次</span>
+                    </div>
+                </div>
+                <div class="tab-bar">
+                    <div class="tab"><span class="i">🏠</span>首页</div>
+                    <div class="tab"><span class="i">📂</span>分类</div>
+                    <div class="tab"><span class="i">🌟</span>发现</div>
+                    <div class="tab active"><span class="i">💎</span>会员</div>
+                    <div class="tab"><span class="i">👤</span>我的</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tag-list"><span class="tag">等级展示</span><span class="tag">积分进度条</span><span class="tag">每日签到</span><span class="tag">权益列表</span><span class="tag">AI剩余次数</span></div>
+        <p style="font-size:13px;color:#666;margin-top:6px;"><strong>交互要点</strong>：点击签到获取积分 · 积分进度可视化 · 权益清晰展示</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 5: 我的 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p5">
+        <div class="section-title"><span>👤</span> 我的页面</div>
+        <p class="desc">个人中心，集中管理用户的所有信息与操作入口。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header">
+                    <span class="left"></span>
+                    <span class="title">我的</span>
+                    <span class="right">⚙️</span>
+                </div>
+                <div class="body">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                        <div style="width:40px;height:40px;border-radius:50%;background:#F0E8DE;display:flex;align-items:center;justify-content:center;font-size:20px;">👤</div>
+                        <div><span style="font-size:14px;font-weight:600;">用户昵称</span><br><span style="font-size:10px;color:#C8A27A;">💎 钻石会员</span></div>
+                    </div>
+                    <!-- Order nav -->
+                    <div style="background:#F8F6F4;border-radius:8px;padding:10px;margin-bottom:10px;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                            <span style="font-size:11px;font-weight:600;">我的订单</span>
+                            <span style="font-size:10px;color:#999;">查看全部 &gt;</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-around;">
+                            <div style="text-align:center;font-size:18px;">📄</div>
+                            <div style="text-align:center;font-size:18px;">📦</div>
+                            <div style="text-align:center;font-size:18px;">🚚</div>
+                            <div style="text-align:center;font-size:18px;">⭐</div>
+                            <div style="text-align:center;font-size:18px;">🔧</div>
+                        </div>
+                        <div style="display:flex;justify-content:space-around;font-size:9px;color:#888;">
+                            <span>待付款</span><span>待发货</span><span>待收货</span><span>已完成</span><span>售后</span>
+                        </div>
+                    </div>
+                    <!-- Links -->
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <div style="display:flex;justify-content:space-between;padding:6px 4px;border-bottom:1px solid #F5F0EB;font-size:12px;"><span>❤️ 我的收藏</span><span style="color:#999;">&gt;</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 4px;border-bottom:1px solid #F5F0EB;font-size:12px;"><span>✨ 我的AI穿搭</span><span style="color:#C8A27A;font-size:10px;">3件 &gt;</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 4px;border-bottom:1px solid #F5F0EB;font-size:12px;"><span>🎁 积分明细</span><span style="color:#999;">&gt;</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 4px;border-bottom:1px solid #F5F0EB;font-size:12px;"><span>📍 收货地址</span><span style="color:#999;">&gt;</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 4px;font-size:12px;"><span>💬 联系客服</span><span style="color:#999;">&gt;</span></div>
+                    </div>
+                </div>
+                <div class="tab-bar">
+                    <div class="tab"><span class="i">🏠</span>首页</div>
+                    <div class="tab"><span class="i">📂</span>分类</div>
+                    <div class="tab"><span class="i">🌟</span>发现</div>
+                    <div class="tab"><span class="i">💎</span>会员</div>
+                    <div class="tab active"><span class="i">👤</span>我的</div>
+                </div>
+            </div>
+        </div>
+
+        <p style="font-size:13px;color:#666;margin-top:6px;"><strong>交互要点</strong>：点击订单状态查看对应列表 · 点击链接进入对应页面</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 6: 商品详情 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p6">
+        <div class="section-title"><span>📄</span> 商品详情页</div>
+        <p class="desc">核心转化页面。包含大图轮播、商品信息、规格选择、抖音视频链接（后台配置）、AI穿戴入口、底部固定操作栏。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header" style="position:absolute;width:100%;background:transparent;border:none;z-index:2;">
+                    <span class="left">◀</span>
+                    <span class="right">🔗 ❤️</span>
+                </div>
+                <div class="body" style="padding-top:36px;">
+                    <div class="placeholder-img" style="height:160px;border-radius:0;font-size:12px;">📷 商品大图轮播（可播放视频）</div>
+                    <div style="padding:8px 0;">
+                        <div style="font-size:14px;font-weight:600;">璀璨星辰18K金钻戒</div>
+                        <div style="display:flex;align-items:center;gap:8px;margin:4px 0;">
+                            <span style="font-size:16px;color:#C8A27A;font-weight:700;">¥3,580</span>
+                            <span style="font-size:11px;color:#999;text-decoration:line-through;">¥5,800</span>
+                            <span style="background:#E8D5C0;color:#A67B52;padding:1px 6px;border-radius:4px;font-size:10px;">-38%</span>
+                        </div>
+                        <div style="font-size:10px;color:#999;">已售 256 件 · 好评率 99%</div>
+                    </div>
+                    <!-- 规格 -->
+                    <div style="background:#F8F6F4;border-radius:6px;padding:8px;font-size:11px;margin-bottom:6px;">
+                        选择规格：<span style="background:#C8A27A;color:#fff;padding:2px 8px;border-radius:4px;">玫瑰金</span> <span style="background:#fff;padding:2px 8px;border-radius:4px;border:1px solid #ddd;">白金</span> <span>...</span>
+                    </div>
+                    <!-- 视频链接 -->
+                    <div style="background:#F0E8DE;border-radius:6px;padding:8px;font-size:11px;color:#A67B52;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+                        <span>📺 查看商品视频详情</span>
+                        <span>抖音 &gt;</span>
+                    </div>
+                    <!-- AI Wear -->
+                    <div style="background:linear-gradient(135deg,#F8F6F4,#F0E8DE);border-radius:6px;padding:8px;font-size:11px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;border:1px solid #E8D5C0;">
+                        <span>✨ AI穿戴试试</span>
+                        <span style="background:#C8A27A;color:#fff;padding:2px 8px;border-radius:4px;font-size:10px;">仅会员</span>
+                    </div>
+                    <!-- 商品参数 -->
+                    <div style="font-size:10px;color:#888;margin-bottom:4px;">材质：18K金 · 重量：约3.5g · 尺寸：可调节</div>
+                </div>
+                <!-- Bottom bar -->
+                <div style="position:sticky;bottom:0;border-top:1px solid #F0F0F0;background:#fff;padding:6px 12px;display:flex;gap:8px;align-items:center;">
+                    <span style="font-size:16px;">💬</span>
+                    <span style="font-size:16px;">❤️</span>
+                    <span style="flex:1;"></span>
+                    <span style="background:#F5F0EB;padding:6px 14px;border-radius:16px;font-size:11px;">加入购物车</span>
+                    <span style="background:#C8A27A;color:#fff;padding:6px 14px;border-radius:16px;font-size:11px;">立即购买</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tag-list"><span class="tag">大图轮播</span><span class="tag">规格选择</span><span class="tag">抖音视频链接</span><span class="tag">AI穿戴入口</span><span class="tag">底部固定操作栏</span></div>
+        <p style="font-size:13px;color:#666;margin-top:6px;"><strong>交互要点</strong>：图片支持视频播放 · 抖音链接后台可配 · 非会员引导开通 · 底部栏固定</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 7: 购物车 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p7">
+        <div class="section-title"><span>🛒</span> 购物车</div>
+        <p class="desc">标准电商购物车，支持全选、数量修改、删除、结算。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header">
+                    <span class="left"></span>
+                    <span class="title">购物车</span>
+                    <span class="right" style="font-size:12px;">编辑</span>
+                </div>
+                <div class="body">
+                    <div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #F5F0EB;">
+                        <span>✅</span>
+                        <div class="placeholder-img" style="width:50px;height:50px;border-radius:6px;">商品</div>
+                        <div style="flex:1;">
+                            <div style="font-size:11px;font-weight:500;">璀璨星辰钻戒 玫瑰金</div>
+                            <div style="font-size:10px;color:#C8A27A;font-weight:600;">¥3,580</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <span style="background:#F0F0F0;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border-radius:4px;font-size:12px;">−</span>
+                            <span style="font-size:12px;">1</span>
+                            <span style="background:#F0F0F0;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border-radius:4px;font-size:12px;">+</span>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #F5F0EB;">
+                        <span>⬜</span>
+                        <div class="placeholder-img" style="width:50px;height:50px;border-radius:6px;">商品</div>
+                        <div style="flex:1;">
+                            <div style="font-size:11px;font-weight:500;">优雅金项链</div>
+                            <div style="font-size:10px;color:#C8A27A;font-weight:600;">¥5,280</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <span style="background:#F0F0F0;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border-radius:4px;font-size:12px;">−</span>
+                            <span style="font-size:12px;">2</span>
+                            <span style="background:#F0F0F0;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border-radius:4px;font-size:12px;">+</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Bottom -->
+                <div style="position:sticky;bottom:0;border-top:1px solid #F0F0F0;background:#fff;padding:8px 12px;display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:11px;">✅ 全选</span>
+                    <span style="flex:1;text-align:right;font-size:11px;">合计：<strong style="color:#C8A27A;font-size:14px;">¥8,860</strong></span>
+                    <span style="background:#C8A27A;color:#fff;padding:8px 20px;border-radius:18px;font-size:12px;font-weight:600;">结算(2)</span>
+                </div>
+            </div>
+        </div>
+
+        <p style="font-size:13px;color:#666;margin-top:6px;"><strong>交互要点</strong>：全选/反选 · 数量加减 · 左滑删除 · 结算跳转</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 8: 结算页 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p8">
+        <div class="section-title"><span>💳</span> 结算页</div>
+        <p class="desc">订单确认页，包含收货地址、商品清单、优惠券/积分抵扣和支付提交。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header">
+                    <span class="left">◀</span>
+                    <span class="title">确认订单</span>
+                    <span class="right"></span>
+                </div>
+                <div class="body">
+                    <div style="background:#F8F6F4;border-radius:6px;padding:10px;margin-bottom:8px;">
+                        <div style="font-size:11px;font-weight:600;">📍 收货地址</div>
+                        <div style="font-size:10px;color:#888;">张三 138****8888<br>广东省深圳市南山区科技园XX号</div>
+                    </div>
+                    <div style="font-size:11px;font-weight:600;margin-bottom:4px;">商品清单</div>
+                    <div style="font-size:10px;color:#666;margin-bottom:8px;">
+                        璀璨星辰钻戒 × 1 · ¥3,580<br>
+                        优雅金项链 × 2 · ¥5,280/件
+                    </div>
+                    <div style="background:#F8F6F4;border-radius:6px;padding:8px;margin-bottom:8px;">
+                        <div style="display:flex;justify-content:space-between;font-size:10px;"><span>优惠券</span><span style="color:#C8A27A;">选择优惠券 &gt;</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:4px;"><span>积分抵扣</span><span>可抵扣 ¥35.80 <span style="color:#C8A27A;">使用</span></span></div>
+                    </div>
+                    <div style="border-top:1px dashed #ddd;padding-top:6px;">
+                        <div style="display:flex;justify-content:space-between;font-size:10px;color:#888;"><span>商品小计</span><span>¥14,140</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:10px;color:#888;"><span>运费</span><span>免运费</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-top:4px;"><span>实付金额</span><span style="color:#C8A27A;">¥14,140</span></div>
+                    </div>
+                </div>
+                <div style="position:sticky;bottom:0;border-top:1px solid #F0F0F0;background:#fff;padding:8px 12px;">
+                    <span style="background:#C8A27A;color:#fff;padding:10px 24px;border-radius:20px;font-size:13px;font-weight:600;display:block;text-align:center;">提交订单 · 微信支付</span>
+                </div>
+            </div>
+        </div>
+
+        <p style="font-size:13px;color:#666;margin-top:6px;"><strong>交互要点</strong>：地址选择 · 优惠券和积分可选 · 微信支付拉起</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 9: 拍卖页 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p9">
+        <div class="section-title"><span>🔨</span> 限时拍卖页</div>
+        <p class="desc">实时拍卖模块，展示拍品、当前出价、倒计时和出价记录。制造紧迫感和竞争氛围。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header">
+                    <span class="left"></span>
+                    <span class="title">限时拍卖</span>
+                    <span class="right">📖</span>
+                </div>
+                <div class="body">
+                    <div style="border-radius:8px;overflow:hidden;border:1px solid #F0E8DE;margin-bottom:10px;">
+                        <div class="placeholder-img" style="height:120px;border-radius:0;">拍品图</div>
+                        <div style="padding:8px;">
+                            <div style="font-size:12px;font-weight:600;">冰种翡翠吊坠</div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                                <div><span style="font-size:11px;color:#888;">当前出价</span><br><span style="font-size:16px;color:#C8A27A;font-weight:700;">¥18,000</span></div>
+                                <div style="text-align:right;"><span style="font-size:11px;color:#888;">起拍价 ¥8,000</span><br><span style="font-size:11px;">👤 23人出价</span></div>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+                                <span style="font-size:12px;">⏰ <strong>02:15:30</strong></span>
+                                <span style="background:#C8A27A;color:#fff;padding:6px 20px;border-radius:16px;font-size:12px;font-weight:600;">出价</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="border-radius:8px;overflow:hidden;border:1px solid #F0E8DE;">
+                        <div class="placeholder-img" style="height:120px;border-radius:0;">拍品图</div>
+                        <div style="padding:8px;">
+                            <div style="font-size:12px;font-weight:600;">天然珍珠项链</div>
+                            <div style="display:flex;justify-content:space-between;margin-top:4px;">
+                                <div><span style="font-size:11px;color:#888;">当前出价</span><br><span style="font-size:16px;color:#C8A27A;font-weight:700;">¥6,500</span></div>
+                                <div style="text-align:right;"><span style="font-size:11px;color:#888;">起拍价 ¥3,000</span><br><span style="font-size:11px;">👤 15人出价</span></div>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+                                <span style="font-size:12px;">⏰ <strong>00:45:12</strong></span>
+                                <span style="background:#C8A27A;color:#fff;padding:6px 20px;border-radius:16px;font-size:12px;font-weight:600;">出价</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-bar">
+                    <div class="tab"><span class="i">🏠</span>首页</div>
+                    <div class="tab"><span class="i">📂</span>分类</div>
+                    <div class="tab"><span class="i">🌟</span>发现</div>
+                    <div class="tab"><span class="i">💎</span>会员</div>
+                    <div class="tab"><span class="i">👤</span>我的</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tag-list"><span class="tag">拍品卡片</span><span class="tag">实时倒计时</span><span class="tag">当前出价</span><span class="tag">参与人数</span><span class="tag">一键出价</span></div>
+        <p style="font-size:13px;color:#666;margin-top:6px;"><strong>交互要点</strong>：点击出价弹出价窗口 · 倒计时实时更新 · 出价记录可展开 · 被超过发模板消息</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 10: 活动页 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p10">
+        <div class="section-title"><span>🎉</span> 活动页</div>
+        <p class="desc">展示当前所有营销活动，包括限时折扣、满减活动、优惠券领取等。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header">
+                    <span class="left"></span>
+                    <span class="title">活动中心</span>
+                    <span class="right"></span>
+                </div>
+                <div class="body">
+                    <div style="background:linear-gradient(135deg,#E8D5C0,#C8A27A);border-radius:8px;padding:14px;color:#fff;margin-bottom:10px;">
+                        <div style="font-size:13px;font-weight:600;">🎊 七夕珠宝节</div>
+                        <div style="font-size:10px;opacity:0.9;">全场珠宝满2000减300 · 限时7天</div>
+                        <div style="margin-top:6px;"><span style="background:rgba(255,255,255,0.2);padding:2px 12px;border-radius:10px;font-size:10px;">立即参与</span></div>
+                    </div>
+                    <div style="background:linear-gradient(135deg,#F0E8DE,#E8D5C0);border-radius:8px;padding:14px;margin-bottom:10px;">
+                        <div style="font-size:13px;font-weight:600;">🎫 新人专享券</div>
+                        <div style="font-size:10px;color:#888;">满1000减100 · 注册即领</div>
+                        <div style="margin-top:6px;"><span style="background:#C8A27A;color:#fff;padding:2px 12px;border-radius:10px;font-size:10px;">立即领取</span></div>
+                    </div>
+                    <div style="border:1px solid #F0E8DE;border-radius:8px;padding:14px;">
+                        <div style="font-size:13px;font-weight:600;">💰 积分兑换</div>
+                        <div style="font-size:10px;color:#888;">5000积分兑换50元无门槛券</div>
+                        <div style="margin-top:6px;"><span style="background:#F5F0EB;color:#A67B52;padding:2px 12px;border-radius:10px;font-size:10px;">去兑换</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p style="font-size:13px;color:#666;margin-top:6px;"><strong>交互要点</strong>：活动卡片展示 · 点击参与进入活动 · 领取优惠券 · 后台可配置所有活动</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 11: AI穿戴 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p11">
+        <div class="section-title"><span>🤖</span> AI穿戴页</div>
+        <p class="desc">会员专属功能。用户上传照片，AI生成佩戴珠宝的效果图。每日有次数限制，后台可配置。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header">
+                    <span class="left">◀</span>
+                    <span class="title">AI穿戴</span>
+                    <span class="right">📖</span>
+                </div>
+                <div class="body" style="text-align:center;">
+                    <div style="font-size:12px;margin-bottom:8px;">上传照片，AI为您展示佩戴效果</div>
+                    <div style="width:180px;height:180px;border:2px dashed #E8D5C0;border-radius:12px;margin:0 auto;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#C8A27A;font-size:14px;">
+                        📷
+                        <span style="font-size:11px;margin-top:4px;">点击上传照片</span>
+                    </div>
+                    <div style="display:flex;gap:12px;justify-content:center;margin:10px 0;">
+                        <span style="background:#F5F0EB;padding:6px 16px;border-radius:16px;font-size:11px;">📷 拍照</span>
+                        <span style="background:#C8A27A;color:#fff;padding:6px 16px;border-radius:16px;font-size:11px;">🖼️ 相册</span>
+                    </div>
+                    <div style="background:#C8A27A;color:#fff;padding:10px 0;border-radius:20px;font-size:13px;font-weight:600;margin-bottom:6px;">✨ 开始生成</div>
+                    <div style="font-size:10px;color:#999;">今日剩余：<strong style="color:#C8A27A;">3</strong> 次</div>
+                    <!-- Result Preview -->
+                    <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <div><div class="placeholder-img" style="height:100px;">原图</div><span style="font-size:9px;">原照片</span></div>
+                        <div><div class="placeholder-img" style="height:100px;border:2px solid #C8A27A;">生成结果</div><span style="font-size:9px;color:#C8A27A;">AI生成效果</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ai-box" style="margin-top:10px;">
+            <div style="font-weight:600;margin-bottom:6px;">🤖 AI穿戴流程</div>
+            <div class="flow-steps">
+                <div class="flow-step"><span class="sn">1</span> 进入商品详情 → 点击「AI穿戴」</div>
+                <div class="flow-step"><span class="ar">↓</span></div>
+                <div class="flow-step"><span class="sn">2</span> 非会员 → 引导开通会员</div>
+                <div class="flow-step"><span class="sn">2</span> 会员检查当日剩余次数</div>
+                <div class="flow-step"><span class="ar">↓</span></div>
+                <div class="flow-step"><span class="sn">3</span> 拍照 或 从相册上传照片</div>
+                <div class="flow-step"><span class="ar">↓</span></div>
+                <div class="flow-step"><span class="sn">4</span> 后端调用火山引擎豆包API（5-15秒）</div>
+                <div class="flow-step"><span class="ar">↓</span></div>
+                <div class="flow-step"><span class="sn">5</span> 生成结果展示 → 保存/分享/购买</div>
+            </div>
+            <div style="margin-top:8px;padding:8px;background:rgba(255,255,255,0.5);border-radius:8px;font-size:11px;">
+                <strong>每日限额（后台可配）</strong><br>
+                普通会员：0次 · 黄金会员：3次/天 · 钻石会员：10次/天
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 12: 积分商城 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p12">
+        <div class="section-title"><span>🎁</span> 积分商城</div>
+        <p class="desc">用户使用积分兑换商品或优惠券，提升积分价值和用户活跃度。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header">
+                    <span class="left">◀</span>
+                    <span class="title">积分商城</span>
+                    <span class="right" style="font-size:11px;color:#C8A27A;">3,580分</span>
+                </div>
+                <div class="body">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <div style="border:1px solid #F0E8DE;border-radius:8px;padding:8px;text-align:center;">
+                            <div class="placeholder-img" style="height:70px;">🎁</div>
+                            <div style="font-size:10px;font-weight:600;margin:4px 0;">50元优惠券</div>
+                            <div style="font-size:10px;color:#C8A27A;">5,000积分</div>
+                            <div style="background:#F5F0EB;padding:3px 0;border-radius:12px;font-size:10px;margin-top:4px;">立即兑换</div>
+                        </div>
+                        <div style="border:1px solid #F0E8DE;border-radius:8px;padding:8px;text-align:center;">
+                            <div class="placeholder-img" style="height:70px;">🎁</div>
+                            <div style="font-size:10px;font-weight:600;margin:4px 0;">品牌收纳盒</div>
+                            <div style="font-size:10px;color:#C8A27A;">8,000积分</div>
+                            <div style="background:#F5F0EB;padding:3px 0;border-radius:12px;font-size:10px;margin-top:4px;">立即兑换</div>
+                        </div>
+                        <div style="border:1px solid #F0E8DE;border-radius:8px;padding:8px;text-align:center;">
+                            <div class="placeholder-img" style="height:70px;">🎁</div>
+                            <div style="font-size:10px;font-weight:600;margin:4px 0;">珠宝清洁布</div>
+                            <div style="font-size:10px;color:#C8A27A;">2,000积分</div>
+                            <div style="background:#F5F0EB;padding:3px 0;border-radius:12px;font-size:10px;margin-top:4px;">立即兑换</div>
+                        </div>
+                        <div style="border:1px solid #F0E8DE;border-radius:8px;padding:8px;text-align:center;">
+                            <div class="placeholder-img" style="height:70px;">🎁</div>
+                            <div style="font-size:10px;font-weight:600;margin:4px 0;">100元优惠券</div>
+                            <div style="font-size:10px;color:#C8A27A;">10,000积分</div>
+                            <div style="background:#F5F0EB;padding:3px 0;border-radius:12px;font-size:10px;margin-top:4px;">立即兑换</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 13: 订单列表 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p13">
+        <div class="section-title"><span>📋</span> 订单列表页</div>
+        <p class="desc">用户查看所有订单，按状态分组展示。支持查看详情、取消订单、确认收货等操作。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header">
+                    <span class="left">◀</span>
+                    <span class="title">我的订单</span>
+                    <span class="right"></span>
+                </div>
+                <div style="display:flex;padding:6px 8px;border-bottom:1px solid #F0F0F0;overflow-x:auto;gap:4px;">
+                    <span style="background:#C8A27A;color:#fff;padding:3px 12px;border-radius:12px;font-size:10px;white-space:nowrap;">全部</span>
+                    <span style="background:#F5F0EB;padding:3px 12px;border-radius:12px;font-size:10px;white-space:nowrap;">待付款</span>
+                    <span style="background:#F5F0EB;padding:3px 12px;border-radius:12px;font-size:10px;white-space:nowrap;">待发货</span>
+                    <span style="background:#F5F0EB;padding:3px 12px;border-radius:12px;font-size:10px;white-space:nowrap;">待收货</span>
+                    <span style="background:#F5F0EB;padding:3px 12px;border-radius:12px;font-size:10px;white-space:nowrap;">已完成</span>
+                </div>
+                <div class="body">
+                    <div style="border-bottom:1px solid #F5F0EB;padding:6px 0;">
+                        <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;">
+                            <span>2026-07-08 14:30</span>
+                            <span style="color:#C8A27A;">待发货</span>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:4px;">
+                            <div class="placeholder-img" style="width:44px;height:44px;border-radius:6px;">图</div>
+                            <div style="flex:1;"><span style="font-size:11px;">璀璨星辰钻戒</span><br><span style="font-size:10px;color:#999;">× 1</span></div>
+                            <span style="font-size:11px;color:#C8A27A;font-weight:600;">¥3,580</span>
+                        </div>
+                    </div>
+                    <div style="padding:6px 0;">
+                        <div style="display:flex;justify-content:space-between;font-size:10px;color:#999;">
+                            <span>2026-07-05 10:15</span>
+                            <span style="color:#4CAF50;">已完成</span>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:4px;">
+                            <div class="placeholder-img" style="width:44px;height:44px;border-radius:6px;">图</div>
+                            <div style="flex:1;"><span style="font-size:11px;">优雅金项链</span><br><span style="font-size:10px;color:#999;">× 2</span></div>
+                            <span style="font-size:11px;color:#C8A27A;font-weight:600;">¥10,560</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p style="font-size:13px;color:#666;margin-top:6px;"><strong>交互要点</strong>：状态Tab切换 · 点击进详情 · 待付款可取消/支付 · 待收货可确认</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PAGE 14: 搜索页 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p14">
+        <div class="section-title"><span>🔍</span> 搜索页</div>
+        <p class="desc">全局搜索入口，支持商品名称搜索、搜索历史、热门搜索推荐。</p>
+
+        <div class="phone-wrapper">
+            <div class="phone">
+                <div class="status-bar"><span>9:41</span><span>🔋 100%</span></div>
+                <div class="header" style="border:none;">
+                    <span class="left">◀</span>
+                    <div style="flex:1;background:#F5F0EB;border-radius:20px;padding:6px 12px;margin:0 8px;font-size:12px;color:#999;">🔍 搜索珠宝...</div>
+                    <span style="font-size:12px;color:#C8A27A;">搜索</span>
+                </div>
+                <div class="body">
+                    <div style="margin-bottom:10px;">
+                        <div style="font-size:11px;font-weight:600;margin-bottom:4px;">热门搜索</div>
+                        <div class="tag-list">
+                            <span class="tag">钻戒</span>
+                            <span class="tag">项链</span>
+                            <span class="tag">求婚戒指</span>
+                            <span class="tag">18K金</span>
+                            <span class="tag">珍珠</span>
+                            <span class="tag">手链</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:4px;">
+                            <span>搜索历史</span>
+                            <span style="font-weight:400;color:#999;font-size:10px;">🗑️ 清除</span>
+                        </div>
+                        <div style="font-size:11px;color:#888;padding:4px 0;">六爪钻戒</div>
+                        <div style="font-size:11px;color:#888;padding:4px 0;">金项链 女</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p style="font-size:13px;color:#666;margin-top:6px;"><strong>交互要点</strong>：实时搜索联想 · 历史记录本地存储 · 热门搜索后台可配 · 搜索结果跳转商品列表</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 后台管理 -->
+    <!-- ============================================================ -->
+    <div class="section" id="p15">
+        <div class="section-title"><span>🖥️</span> 后台管理系统</div>
+        <p class="desc">PC端管理后台 + H5移动端自适应，前台所有内容均可在这里管理。</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="background:#F8F6F4;border-radius:8px;padding:12px;">
+                <div style="font-size:13px;font-weight:600;color:#C8A27A;">📊 仪表盘</div>
+                <div style="font-size:11px;color:#666;">销售额/订单量/用户增长趋势图表</div>
+            </div>
+            <div style="background:#F8F6F4;border-radius:8px;padding:12px;">
+                <div style="font-size:13px;font-weight:600;color:#C8A27A;">📦 商品管理</div>
+                <div style="font-size:11px;color:#666;">CRUD · 分类 · 上下架 · 视频链接 · 规格</div>
+            </div>
+            <div style="background:#F8F6F4;border-radius:8px;padding:12px;">
+                <div style="font-size:13px;font-weight:600;color:#C8A27A;">📋 订单管理</div>
+                <div style="font-size:11px;color:#666;">全流程 · 售后 · 发货 · 退款 · 导出</div>
+            </div>
+            <div style="background:#F8F6F4;border-radius:8px;padding:12px;">
+                <div style="font-size:13px;font-weight:600;color:#C8A27A;">👥 会员管理</div>
+                <div style="font-size:11px;color:#666;">列表 · 详情 · 等级 · 积分调整</div>
+            </div>
+            <div style="background:#F8F6F4;border-radius:8px;padding:12px;">
+                <div style="font-size:13px;font-weight:600;color:#C8A27A;">🎉 活动管理</div>
+                <div style="font-size:11px;color:#666;">折扣 · 满减 · 优惠券 · 积分商城</div>
+            </div>
+            <div style="background:#F8F6F4;border-radius:8px;padding:12px;">
+                <div style="font-size:13px;font-weight:600;color:#C8A27A;">🔨 拍卖管理</div>
+                <div style="font-size:11px;color:#666;">拍品 · 时间 · 出价记录 · 自动结算</div>
+            </div>
+            <div style="background:#FFF8F0;border-radius:8px;padding:12px;border:1px solid #E8D5C0;">
+                <div style="font-size:13px;font-weight:600;color:#C8A27A;">🤖 AI穿戴配置</div>
+                <div style="font-size:11px;color:#666;">每日限额 · 提示词模板 · 生成记录 · 分类配置</div>
+            </div>
+            <div style="background:#F8F6F4;border-radius:8px;padding:12px;">
+                <div style="font-size:13px;font-weight:600;color:#C8A27A;">📰 内容管理</div>
+                <div style="font-size:11px;color:#666;">Banner · 首页图标 · 发现页 · 文章</div>
+            </div>
+            <div style="background:#F8F6F4;border-radius:8px;padding:12px;">
+                <div style="font-size:13px;font-weight:600;color:#C8A27A;">⚙️ 系统设置</div>
+                <div style="font-size:11px;color:#666;">管理员 · 权限 · 基础配置 · 操作日志</div>
+            </div>
+            <div style="background:#F8F6F4;border-radius:8px;padding:12px;">
+                <div style="font-size:13px;font-weight:600;color:#C8A27A;">🎁 积分管理</div>
+                <div style="font-size:11px;color:#666;">规则 · 比例 · 兑换 · 有效期</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== AI穿戴详细流程 ===== -->
+    <div class="section">
+        <div class="section-title"><span>🤖</span> AI穿戴 - 技术实现</div>
+        <div class="ai-box">
+            <p style="font-size:13px;font-weight:600;margin-bottom:6px;">推荐方案：火山引擎豆包 Seedream 5.0 lite</p>
+            <div style="font-size:12px;color:#555;">
+                <strong>能力</strong>：图生图（用户照片+商品图融合）<br>
+                <strong>价格</strong>：0.22元/次<br>
+                <strong>速度</strong>：5-15秒出图<br>
+                <strong>接入</strong>：OpenAI兼容API，Java轻松对接
+            </div>
+            <div style="background:rgba(255,255,255,0.5);border-radius:8px;padding:10px;margin-top:8px;">
+                <div style="font-size:11px;font-weight:600;">提示词模板策略（按商品分类配置）</div>
+                <div style="font-size:10px;color:#666;margin-top:4px;">
+                    戒指类：<code>"一位优雅女性佩戴{product_name}，{product_desc}，手指特写，高清写实..."</code><br>
+                    项链类：<code>"女性佩戴{product_name}，{product_desc}，颈部展示，自然光线..."</code><br>
+                    耳饰类：<code>"女性佩戴{product_name}，面部侧面展示，皮肤真实质感..."</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 技术规格 ===== -->
+    <div class="section">
+        <div class="section-title"><span>🔧</span> 技术规格</div>
+        <div class="feature-grid">
+            <div class="feature-item"><span class="fi-icon">🎯</span><div class="fi-title">前端</div><div class="fi-desc">uni-app + Vue3</div></div>
+            <div class="feature-item"><span class="fi-icon">⚙️</span><div class="fi-title">后端</div><div class="fi-desc">Spring Boot 3.x</div></div>
+            <div class="feature-item"><span class="fi-icon">🗄️</span><div class="fi-title">数据库</div><div class="fi-desc">MySQL 8.0 · 25张表</div></div>
+            <div class="feature-item"><span class="fi-icon">🖥️</span><div class="fi-title">后台</div><div class="fi-desc">Vue3 + Element Plus + ECharts</div></div>
+            <div class="feature-item"><span class="fi-icon">🤖</span><div class="fi-title">AI</div><div class="fi-desc">火山引擎豆包 API</div></div>
+            <div class="feature-item"><span class="fi-icon">☁️</span><div class="fi-title">云服务</div><div class="fi-desc">腾讯云 · CVM + COS</div></div>
+            <div class="feature-item"><span class="fi-icon">💳</span><div class="fi-title">支付</div><div class="fi-desc">微信支付官方</div></div>
+            <div class="feature-item"><span class="fi-icon">🔐</span><div class="fi-title">安全</div><div class="fi-desc">JWT + HTTPS + 数据加密</div></div>
+        </div>
+    </div>
+
+    <!-- ===== 开发计划 ===== -->
+    <div class="section">
+        <div class="section-title"><span>📅</span> 开发计划（约12周）</div>
+        <div class="flow-steps">
+            <div class="flow-step"><span class="sn">1</span> <strong>环境搭建</strong> 服务器·数据库·代码框架 <span style="font-size:11px;color:#999;">1周</span></div>
+            <div class="flow-step"><span class="ar">↓</span></div>
+            <div class="flow-step"><span class="sn">2</span> <strong>小程序UI开发</strong> 14个页面 <span style="font-size:11px;color:#999;">3周</span></div>
+            <div class="flow-step"><span class="ar">↓</span></div>
+            <div class="flow-step"><span class="sn">3</span> <strong>后台管理开发</strong> 10大模块 <span style="font-size:11px;color:#999;">3周</span></div>
+            <div class="flow-step"><span class="ar">↓</span></div>
+            <div class="flow-step"><span class="sn">4</span> <strong>交易核心</strong> 支付·购物车·订单 <span style="font-size:11px;color:#999;">2周</span></div>
+            <div class="flow-step"><span class="ar">↓</span></div>
+            <div class="flow-step"><span class="sn">5</span> <strong>AI穿戴</strong> 火山引擎API对接 <span style="font-size:11px;color:#999;">1周</span></div>
+            <div class="flow-step"><span class="ar">↓</span></div>
+            <div class="flow-step"><span class="sn">6</span> <strong>测试+部署上线</strong> <span style="font-size:11px;color:#999;">2周</span></div>
+        </div>
+    </div>
+
+    <!-- ===== 部署 ===== -->
+    <div class="section">
+        <div class="section-title"><span>☁️</span> 部署环境</div>
+        <div style="display:flex;gap:8px;">
+            <div style="flex:1;background:#F8F6F4;border-radius:8px;padding:12px;text-align:center;">
+                <div style="font-size:20px;">🖥️</div>
+                <div style="font-size:12px;font-weight:600;">服务器</div>
+                <div style="font-size:11px;color:#888;">腾讯云轻量<br>2核2G · 5M带宽<br>首年约500元</div>
+            </div>
+            <div style="flex:1;background:#F8F6F4;border-radius:8px;padding:12px;text-align:center;">
+                <div style="font-size:20px;">🌐</div>
+                <div style="font-size:12px;font-weight:600;">域名+备案</div>
+                <div style="font-size:11px;color:#888;">腾讯云域名<br>免费ICP备案<br>免费SSL证书</div>
+            </div>
+            <div style="flex:1;background:#F8F6F4;border-radius:8px;padding:12px;text-align:center;">
+                <div style="font-size:20px;">💾</div>
+                <div style="font-size:12px;font-weight:600;">存储</div>
+                <div style="font-size:11px;color:#888;">腾讯云COS<br>图片/文件存储<br>按量付费</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align:center;padding:24px 0 16px;font-size:12px;color:#bbb;">
+        嘉怡珠宝 · 微信小程序商城 完整项目方案书<br>
+        版本 V1.0 · 2026年7月
+    </div>
+
+</div>
+
+</body>
+</html>

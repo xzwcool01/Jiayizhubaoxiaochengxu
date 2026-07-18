@@ -1,0 +1,40 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: jiayi-api
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+  datasource:
+    url: jdbc:mysql://localhost:3306/jiayi_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 011108
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+springdoc:
+  api-docs:
+    path: /api/v3/api-docs
+  swagger-ui:
+    path: /api/swagger-ui.html
+
+weixin:
+  appid: wxff03445f8c883241
+  secret: bcbad8153f9631f3eb3a075371487d5d
+
+logging:
+  level:
+    com.jiayi: debug
