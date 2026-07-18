@@ -22,6 +22,7 @@ export interface PmsProduct {
   isNew: number
   isRecommend: number
   sortOrder: number
+  weight: number
   status: number
   extraAttrs: string
   createTime: string
@@ -47,6 +48,7 @@ export interface ProductDTO {
   isNew?: number
   isRecommend?: number
   sortOrder?: number
+  weight?: number
   status?: number
   extraAttrs?: string
 }

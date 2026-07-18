@@ -30,6 +30,7 @@ public class PmsProduct {
     private Integer isNew;
     private Integer isRecommend;
     private Integer sortOrder;
+    private Integer weight;
     private Integer status;
     private String extraAttrs;
     private String videoUrl;

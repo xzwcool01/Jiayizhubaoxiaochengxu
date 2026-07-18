@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS pms_product (
     is_new TINYINT DEFAULT 0,
     is_recommend TINYINT DEFAULT 0,
     sort_order INT DEFAULT 0,
+    weight INT DEFAULT 0 COMMENT '全局权重，越大越靠前',
     status TINYINT DEFAULT 0 COMMENT '0-下架 1-上架',
     extra_attrs TEXT COMMENT 'JSON 扩展属性',
     video_url VARCHAR(500),

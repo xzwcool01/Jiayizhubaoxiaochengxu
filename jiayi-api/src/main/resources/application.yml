@@ -25,6 +25,9 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
+app:
+  upload-dir: ./uploads
+
 springdoc:
   api-docs:
     path: /api/v3/api-docs
@@ -38,3 +41,5 @@ weixin:
 logging:
   level:
     com.jiayi: debug
+    org.springframework.transaction: debug
+    org.springframework.jdbc: debug

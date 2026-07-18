@@ -3,6 +3,9 @@ package com.jiayi.controller;
 import com.jiayi.common.R;
 import com.jiayi.dto.UploadBase64DTO;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,12 +18,18 @@ import java.util.UUID;
 @RequestMapping("/api")
 public class FileUploadController {
 
-    private static final String UPLOAD_DIR = "uploads" + File.separator + "avatars";
-    private static final String PRODUCT_UPLOAD_DIR = "uploads" + File.separator + "products";
+    private static final Logger log = LoggerFactory.getLogger(FileUploadController.class);
 
+    private final String uploadDir;
     private final HttpServletRequest request;
 
-    public FileUploadController(HttpServletRequest request) {
+    public FileUploadController(@Value("${app.upload-dir:./uploads}") String uploadDir, HttpServletRequest request) {
+        File dir = new File(uploadDir);
+        if (!dir.isAbsolute()) {
+            dir = new File(System.getProperty("user.dir"), uploadDir);
+        }
+        this.uploadDir = dir.getAbsolutePath();
+        log.info("文件上传根目录: {}", this.uploadDir);
         this.request = request;
     }
 
@@ -34,18 +43,11 @@ public class FileUploadController {
     @PostMapping("/upload/image")
     public R<String> uploadImage(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) return R.error("文件为空");
-        String ext = ".jpg";
-        String name = file.getOriginalFilename();
-        if (name != null && name.contains(".")) ext = name.substring(name.lastIndexOf("."));
-        String filename = UUID.randomUUID() + ext;
-        File dir = new File(UPLOAD_DIR);
-        if (!dir.exists()) dir.mkdirs();
-        try {
-            file.transferTo(new File(dir, filename));
-            return R.ok(fullUrl("/uploads/avatars/" + filename));
-        } catch (Exception e) {
-            return R.error("上传失败: " + e.getMessage());
-        }
+        String filename = saveFile(file, "avatars");
+        if (filename == null) return R.error("上传失败");
+        String url = fullUrl("/uploads/avatars/" + filename);
+        log.info("头像上传成功: {}", url);
+        return R.ok(url);
     }
 
     @PostMapping("/upload/image-base64")
@@ -53,13 +55,16 @@ public class FileUploadController {
         if (dto.getBase64() == null || dto.getBase64().isEmpty()) return R.error("数据为空");
         String ext = dto.getExt() != null && !dto.getExt().isEmpty() ? "." + dto.getExt() : ".jpg";
         String filename = UUID.randomUUID() + ext;
-        File dir = new File(UPLOAD_DIR);
-        if (!dir.exists()) dir.mkdirs();
+        File dir = new File(uploadDir, "avatars");
+        dir.mkdirs();
         try {
             byte[] bytes = Base64.getDecoder().decode(dto.getBase64());
             Files.write(new File(dir, filename).toPath(), bytes);
-            return R.ok(fullUrl("/uploads/avatars/" + filename));
+            String url = fullUrl("/uploads/avatars/" + filename);
+            log.info("Base64图片上传成功: {}", url);
+            return R.ok(url);
         } catch (Exception e) {
+            log.error("Base64图片上传失败: {}", e.getMessage());
             return R.error("上传失败: " + e.getMessage());
         }
     }
@@ -68,18 +73,37 @@ public class FileUploadController {
     public R<String> uploadProductImage(@RequestParam("file") MultipartFile file,
                                         @RequestParam("productType") Integer productType) {
         if (file.isEmpty()) return R.error("文件为空");
-        String ext = ".jpg";
-        String name = file.getOriginalFilename();
-        if (name != null && name.contains(".")) ext = name.substring(name.lastIndexOf("."));
-        String filename = UUID.randomUUID() + ext;
         String typeDir = productType != null ? productType.toString() : "0";
-        File dir = new File(PRODUCT_UPLOAD_DIR + File.separator + typeDir + File.separator + "temp");
-        if (!dir.exists()) dir.mkdirs();
+        String subDir = "products" + File.separator + typeDir + File.separator + "temp";
+        String filename = saveFile(file, subDir);
+        if (filename == null) return R.error("上传失败");
+        String url = fullUrl("/uploads/products/" + typeDir + "/temp/" + filename);
+        log.info("商品图片上传成功: type={}, url={}", typeDir, url);
+        return R.ok(url);
+    }
+
+    private String saveFile(MultipartFile file, String subDir) {
+        String ext = getExt(file.getOriginalFilename());
+        String filename = UUID.randomUUID() + ext;
+        File dir = new File(uploadDir, subDir);
+        if (!dir.exists() && !dir.mkdirs()) {
+            log.error("创建目录失败: {}", dir.getAbsolutePath());
+            return null;
+        }
         try {
             file.transferTo(new File(dir, filename));
-            return R.ok(fullUrl("/uploads/products/" + typeDir + "/temp/" + filename));
+            log.debug("文件保存成功: dir={}, filename={}", dir.getAbsolutePath(), filename);
+            return filename;
         } catch (Exception e) {
-            return R.error("上传失败: " + e.getMessage());
+            log.error("文件保存失败: subDir={}, error={}", subDir, e.getMessage());
+            return null;
         }
+    }
+
+    private String getExt(String filename) {
+        if (filename != null && filename.contains(".")) {
+            return filename.substring(filename.lastIndexOf("."));
+        }
+        return ".jpg";
     }
 }

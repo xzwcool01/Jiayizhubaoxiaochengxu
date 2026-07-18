@@ -36,7 +36,7 @@ const form = reactive<ProductDTO>({
   categoryId: 0, productType: 0, name: '', subtitle: '', images: [],
   description: '', price: 0, originalPrice: undefined, pointsPrice: 0,
   stock: 0, flashStock: 0, saleStart: undefined, saleEnd: undefined,
-  memberLevel: 0, isNew: 0, isRecommend: 0, sortOrder: 0, status: 1
+  memberLevel: 0, isNew: 0, isRecommend: 0, sortOrder: 0, weight: 0, status: 1
 })
 const imageUrlList = ref<string[]>([])
 const uploadLoading = ref(false)
@@ -98,7 +98,7 @@ function openCreate() {
     categoryId: categories.value[0]?.id || 0, productType: 0, name: '', subtitle: '',
     images: [], description: '', price: 0, originalPrice: undefined, pointsPrice: 0,
     stock: 0, flashStock: 0, saleStart: undefined, saleEnd: undefined,
-    memberLevel: 0, isNew: 0, isRecommend: 0, sortOrder: 0, status: 1
+    memberLevel: 0, isNew: 0, isRecommend: 0, sortOrder: 0, weight: 0, status: 1
   })
   imageUrlList.value = []
   dialogVisible.value = true
@@ -121,7 +121,7 @@ async function openEdit(id: number) {
     pointsPrice: p.pointsPrice || 0, stock: p.stock || 0, flashStock: p.flashStock || 0,
     saleStart: p.saleStart || undefined, saleEnd: p.saleEnd || undefined,
     memberLevel: p.memberLevel || 0, isNew: p.isNew || 0, isRecommend: p.isRecommend || 0,
-    sortOrder: p.sortOrder || 0, status: p.status ?? 1
+    sortOrder: p.sortOrder || 0, weight: p.weight ?? 0, status: p.status ?? 1
   })
   imageUrlList.value = images.length ? images : p.mainImage ? [p.mainImage] : []
   dialogVisible.value = true
@@ -138,15 +138,13 @@ async function handleDelete(id: number) {
   } catch {}
 }
 
-async function handleImageUpload(file: any) {
+async function handleImageUpload(options: any) {
   uploadLoading.value = true
   try {
     const formData = new FormData()
-    formData.append('file', file.raw || file)
+    formData.append('file', options.file)
     formData.append('productType', String(form.productType))
-    const res = await request.post<any, { code: number; data: string }>('/admin/product/upload-image', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    const res = await request.post<any, { code: number; data: string }>('/admin/product/upload-image', formData)
     if (res.code === 200) {
       imageUrlList.value.push(res.data)
       form.images = [...imageUrlList.value]
@@ -282,6 +280,9 @@ function getMainImageUrl(row: PmsProduct): string {
         <el-table-column label="已售" width="80" align="center">
           <template #default="{ row }">{{ row.sales }}</template>
         </el-table-column>
+        <el-table-column label="权重" width="70" align="center">
+          <template #default="{ row }">{{ row.weight }}</template>
+        </el-table-column>
         <el-table-column label="排序" width="70" align="center">
           <template #default="{ row }">{{ row.sortOrder }}</template>
         </el-table-column>
@@ -397,6 +398,10 @@ function getMainImageUrl(row: PmsProduct): string {
         <!-- Sort & Status -->
         <el-form-item label="排序">
           <el-input-number v-model="form.sortOrder" :min="0" style="width:200px" />
+        </el-form-item>
+        <el-form-item label="权重">
+          <el-input-number v-model="form.weight" :min="0" :max="9999" style="width:200px" />
+          <span style="margin-left:8px; color:#999">越大越靠前</span>
         </el-form-item>
         <el-form-item label="上架">
           <el-switch v-model="form.status" :active-value="1" :inactive-value="0" />
