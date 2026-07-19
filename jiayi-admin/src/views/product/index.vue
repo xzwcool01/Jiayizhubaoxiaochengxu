@@ -261,6 +261,7 @@ function getMainImageUrl(row: PmsProduct): string {
             </div>
           </template>
         </el-table-column>
+        <el-table-column label="类目" width="100" align="center" prop="categoryName" />
         <el-table-column label="类型" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="typeColors[row.productType] as any" size="small" effect="plain">

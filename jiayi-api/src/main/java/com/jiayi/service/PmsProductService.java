@@ -5,4 +5,6 @@ import com.jiayi.entity.PmsProduct;
 
 public interface PmsProductService extends IService<PmsProduct> {
     void moveTempImages(PmsProduct product);
+    void hardDeleteById(Long id);
+    String getUploadDir();
 }

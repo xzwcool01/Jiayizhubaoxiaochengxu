@@ -75,6 +75,16 @@ public class PmsProductServiceImpl extends ServiceImpl<PmsProductMapper, PmsProd
         }
     }
 
+    @Override
+    public void hardDeleteById(Long id) {
+        baseMapper.hardDeleteById(id);
+    }
+
+    @Override
+    public String getUploadDir() {
+        return uploadDir;
+    }
+
     private String moveSingle(String url, String typeDir, String prodDir) {
         if (url == null || !url.contains("/temp/")) return null;
         try {

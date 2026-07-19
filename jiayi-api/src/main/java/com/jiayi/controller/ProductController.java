@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.util.List;
 
 @RestController
@@ -48,6 +49,12 @@ public class ProductController {
                     .or().like(PmsProduct::getSubtitle, dto.getKeyword()));
         }
         Page<PmsProduct> page = productService.page(new Page<>(dto.getPage(), dto.getSize()), q);
+        for (PmsProduct p : page.getRecords()) {
+            if (p.getCategoryId() != null) {
+                PmsCategory c = categoryMapper.selectById(p.getCategoryId());
+                if (c != null) p.setCategoryName(c.getName());
+            }
+        }
         log.info("查询结果: 总数={}, 当前页={}", page.getTotal(), page.getCurrent());
         return R.ok(page);
     }
@@ -120,12 +127,44 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         log.info("删除商品: id={}", id);
-        if (!productService.removeById(id)) {
-            log.warn("删除商品失败: id={}", id);
+        PmsProduct p = productService.getById(id);
+        if (p == null) {
+            log.warn("删除商品不存在: id={}", id);
+            return R.error("商品不存在");
+        }
+
+        try {
+            if (p.getProductType() != null) {
+                String uploadDir = productService.getUploadDir();
+                File dir = new File(uploadDir + File.separator + "products" + File.separator + p.getProductType() + File.separator + id);
+                if (dir.exists()) {
+                    deleteDir(dir);
+                    log.info("已删除商品图片目录: {}", dir.getAbsolutePath());
+                }
+            }
+        } catch (Exception e) {
+            log.error("删除商品图片失败: id={}, error={}", id, e.getMessage());
+        }
+
+        try {
+            productService.hardDeleteById(id);
+            log.info("商品已物理删除: id={}", id);
+        } catch (Exception e) {
+            log.error("物理删除商品失败: id={}, error={}", id, e.getMessage());
             return R.error("删除失败");
         }
-        log.info("商品删除成功: id={}", id);
         return R.ok(null);
+    }
+
+    private void deleteDir(File dir) {
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isDirectory()) deleteDir(f);
+                else f.delete();
+            }
+        }
+        dir.delete();
     }
 
     @GetMapping("/categories")

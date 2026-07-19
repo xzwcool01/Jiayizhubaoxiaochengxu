@@ -3,6 +3,7 @@ import request from '@/utils/axios'
 export interface PmsProduct {
   id: number
   categoryId: number
+  categoryName?: string
   productType: number
   name: string
   subtitle: string

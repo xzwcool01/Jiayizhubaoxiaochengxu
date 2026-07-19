@@ -11,6 +11,8 @@ public class PmsProduct {
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long categoryId;
+    @TableField(exist = false)
+    private String categoryName;
     private Integer productType;
     private String name;
     private String subtitle;
