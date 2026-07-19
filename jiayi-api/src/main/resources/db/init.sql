@@ -93,6 +93,22 @@ INSERT IGNORE INTO pms_category (id, parent_id, name, sort) VALUES
 (6, 0, '套装', 6),
 (7, 0, '其他', 7);
 
+CREATE TABLE IF NOT EXISTS pms_product_page_config (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    product_id BIGINT NOT NULL UNIQUE,
+    ai_enabled TINYINT(1) DEFAULT 0 COMMENT 'AI穿戴模块开关',
+    video_enabled TINYINT(1) DEFAULT 0 COMMENT '抖音视频模块开关',
+    video_cover VARCHAR(500) COMMENT '视频封面图',
+    video_url VARCHAR(500) COMMENT '抖音跳转链接',
+    gallery_enabled TINYINT(1) DEFAULT 0 COMMENT '商品大图模块开关',
+    gallery_images TEXT COMMENT 'JSON数组，多张图片URL',
+    disclaimer_enabled TINYINT(1) DEFAULT 0 COMMENT '免责声明开关',
+    disclaimer_text VARCHAR(500) COMMENT '免责声明文字',
+    disclaimer_color VARCHAR(20) DEFAULT '#605E5A' COMMENT '文字颜色',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS ums_member_signin (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,

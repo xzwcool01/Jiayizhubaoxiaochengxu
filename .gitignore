@@ -1,6 +1,7 @@
 node_modules/
 dist/
 target/
+jiayi-admin/src/**/*.js
 *.log
 .env
 .env.local

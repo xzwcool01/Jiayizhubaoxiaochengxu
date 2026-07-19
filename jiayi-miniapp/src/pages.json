@@ -11,7 +11,8 @@
     {"path": "pages/ai-wear/index", "style": {"navigationStyle": "custom"}},
     {"path": "pages/points/index", "style": {"navigationStyle": "custom"}},
     {"path": "pages/product/detail", "style": {"navigationStyle": "custom"}},
-    {"path": "pages/member/index", "style": {"navigationStyle": "custom"}}
+    {"path": "pages/member/index", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/webview/webview", "style": {"navigationStyle": "custom"}}
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",

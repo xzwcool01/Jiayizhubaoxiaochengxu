@@ -53,3 +53,19 @@ export function getCategories() {
 export function getSharePoster(id: number) {
   return get<string>('/share/poster/' + id)
 }
+
+export interface ProductPageConfig {
+  aiEnabled: number
+  videoEnabled: number
+  videoCover: string
+  videoUrl: string
+  galleryEnabled: number
+  galleryImages: string[]
+  disclaimerEnabled: number
+  disclaimerText: string
+  disclaimerColor: string
+}
+
+export function getProductPageConfig(productId: number) {
+  return get<ProductPageConfig>('/product/' + productId + '/page-config')
+}

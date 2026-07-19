@@ -3,7 +3,8 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getProductList, getProduct, createProduct, updateProduct, deleteProduct,
-  getCategories, PmsProduct, ProductDTO, Category
+  getCategories, getProductPageConfig, saveProductPageConfig,
+  PmsProduct, ProductDTO, Category, ProductPageConfigDTO
 } from '@/api/product'
 import request from '@/utils/axios'
 
@@ -41,6 +42,14 @@ const form = reactive<ProductDTO>({
 const imageUrlList = ref<string[]>([])
 const uploadLoading = ref(false)
 const specsList = ref<{ label: string; value: string }[]>([])
+const activeTab = ref('basic')
+const pageConfig = reactive<ProductPageConfigDTO>({
+  aiEnabled: 1, videoEnabled: 0, videoCover: '', videoUrl: '',
+  galleryEnabled: 0, galleryImages: [],
+  disclaimerEnabled: 0, disclaimerText: '', disclaimerColor: '#999'
+})
+const galleryImageList = ref<string[]>([])
+const galleryUploadLoading = ref(false)
 
 const showPrice = computed(() => form.productType !== 4)
 const showPoints = computed(() => form.productType === 4)
@@ -95,6 +104,13 @@ function resetQuery() {
 function openCreate() {
   editingId.value = null
   dialogTitle.value = '新增商品'
+  activeTab.value = 'basic'
+  Object.assign(pageConfig, {
+    aiEnabled: 1, videoEnabled: 0, videoCover: '', videoUrl: '',
+    galleryEnabled: 0, galleryImages: [],
+    disclaimerEnabled: 0, disclaimerText: '', disclaimerColor: '#999'
+  })
+  galleryImageList.value = []
   Object.assign(form, {
     categoryId: categories.value[0]?.id || 0, productType: 0, name: '', subtitle: '',
     images: [], description: '', descriptionText: '', specs: '', price: 0,
@@ -134,6 +150,20 @@ async function openEdit(id: number) {
     sortOrder: p.sortOrder || 0, weight: p.weight ?? 0, status: p.status ?? 1
   })
   imageUrlList.value = images.length ? images : p.mainImage ? [p.mainImage] : []
+  activeTab.value = 'basic'
+  getProductPageConfig(id).then(r => {
+    if (r.code === 200 && r.data) {
+      const cfg = r.data
+      Object.assign(pageConfig, {
+        aiEnabled: cfg.aiEnabled, videoEnabled: cfg.videoEnabled,
+        videoCover: cfg.videoCover || '', videoUrl: cfg.videoUrl || '',
+        galleryEnabled: cfg.galleryEnabled, galleryImages: cfg.galleryImages || [],
+        disclaimerEnabled: cfg.disclaimerEnabled, disclaimerText: cfg.disclaimerText || '',
+        disclaimerColor: cfg.disclaimerColor || '#999'
+      })
+      galleryImageList.value = Array.isArray(cfg.galleryImages) ? cfg.galleryImages : []
+    }
+  }).catch(() => {})
   dialogVisible.value = true
 }
 
@@ -181,6 +211,34 @@ function removeSpecRow(index: number) {
   specsList.value.splice(index, 1)
 }
 
+async function handleGalleryUpload(options: any) {
+  galleryUploadLoading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', options.file)
+    formData.append('productType', String(form.productType))
+    const res = await request.post<any, { code: number; data: string }>('/admin/product/upload-image', formData)
+    if (res.code === 200) {
+      galleryImageList.value.push(res.data)
+      pageConfig.galleryImages = [...galleryImageList.value]
+      ElMessage.success('上传成功')
+    } else { ElMessage.error(res.message || '上传失败') }
+  } catch (e: any) { ElMessage.error(e?.message || '上传失败') }
+  finally { galleryUploadLoading.value = false }
+}
+
+function removeGalleryImage(index: number) {
+  galleryImageList.value.splice(index, 1)
+  pageConfig.galleryImages = [...galleryImageList.value]
+}
+
+function moveGalleryImage(index: number, direction: number) {
+  const target = index + direction
+  if (target < 0 || target >= galleryImageList.value.length) return;
+  [galleryImageList.value[index], galleryImageList.value[target]] = [galleryImageList.value[target], galleryImageList.value[index]]
+  pageConfig.galleryImages = [...galleryImageList.value]
+}
+
 async function handleSave() {
   if (!form.name) { ElMessage.warning('请输入商品名称'); return }
   if (!form.categoryId) { ElMessage.warning('请选择商品类目'); return }
@@ -191,14 +249,22 @@ async function handleSave() {
   try {
     if (editingId.value) {
       const res = await updateProduct(editingId.value, { ...form, images: imageUrlList.value })
-      if (res.code === 200) { ElMessage.success('更新成功') }
+      if (res.code === 200) {
+        console.log('>>> 即将调用 saveProductPageConfig, productId=', editingId.value, 'pageConfig=', { ...pageConfig, galleryImages: galleryImageList.value })
+        const cfgRes = await saveProductPageConfig(editingId.value, { ...pageConfig, galleryImages: galleryImageList.value })
+        console.log('>>> saveProductPageConfig 返回', cfgRes)
+        ElMessage.success('更新成功')
+      }
     } else {
       const res = await createProduct({ ...form, images: imageUrlList.value })
       if (res.code === 200) { ElMessage.success('创建成功') }
     }
     dialogVisible.value = false
     fetchData()
-  } catch {}
+  } catch (e: any) {
+    console.error('保存失败', e)
+    ElMessage.error('保存失败: ' + (e?.message || '未知错误'))
+  }
 }
 
 async function toggleStatus(row: PmsProduct) {
@@ -332,6 +398,8 @@ function getMainImageUrl(row: PmsProduct): string {
 
     <!-- Create/Edit Dialog -->
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="720px" destroy-on-close>
+      <el-tabs v-model="activeTab">
+        <el-tab-pane label="基本信息" name="basic">
       <el-form ref="formRef" :model="form" label-width="100px" size="small">
         <el-form-item label="商品类型" required>
           <el-select v-model="form.productType" placeholder="选择类型" style="width:100%">
@@ -436,6 +504,53 @@ function getMainImageUrl(row: PmsProduct): string {
           <el-switch v-model="form.status" :active-value="1" :inactive-value="0" />
         </el-form-item>
       </el-form>
+        </el-tab-pane>
+        <el-tab-pane label="页面配置" name="pageConfig">
+      <el-form label-width="120px" size="small" style="margin-top:10px">
+        <el-divider content-position="left">AI穿戴</el-divider>
+        <el-form-item label="启用AI穿戴">
+          <el-switch v-model="pageConfig.aiEnabled" :active-value="1" :inactive-value="0" />
+        </el-form-item>
+        <el-divider content-position="left">抖音视频</el-divider>
+        <el-form-item label="启用视频">
+          <el-switch v-model="pageConfig.videoEnabled" :active-value="1" :inactive-value="0" />
+        </el-form-item>
+        <el-form-item label="视频链接">
+          <el-input v-model="pageConfig.videoUrl" placeholder="https://www.douyin.com/video/xxx" />
+        </el-form-item>
+        <el-divider content-position="left">大图展示</el-divider>
+        <el-form-item label="启用大图">
+          <el-switch v-model="pageConfig.galleryEnabled" :active-value="1" :inactive-value="0" />
+        </el-form-item>
+        <el-form-item label="大图列表">
+          <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; width:100%">
+            <div v-for="(url, i) in galleryImageList" :key="i" style="position:relative; width:120px">
+              <el-image :src="url" style="width:120px;height:120px;border-radius:6px;object-fit:cover" fit="cover" />
+              <div style="display:flex; gap:4px; margin-top:4px; justify-content:center">
+                <el-button size="small" :disabled="i===0" @click="moveGalleryImage(i, -1)">←</el-button>
+                <el-button size="small" :disabled="i===galleryImageList.length-1" @click="moveGalleryImage(i, 1)">→</el-button>
+                <el-button size="small" type="danger" @click="removeGalleryImage(i)">×</el-button>
+              </div>
+            </div>
+            <el-upload :show-file-list="false" :http-request="handleGalleryUpload" accept="image/*">
+              <el-button :loading="galleryUploadLoading" size="small">上传大图</el-button>
+            </el-upload>
+          </div>
+        </el-form-item>
+        <el-divider content-position="left">免责声明</el-divider>
+        <el-form-item label="启用免责">
+          <el-switch v-model="pageConfig.disclaimerEnabled" :active-value="1" :inactive-value="0" />
+        </el-form-item>
+        <el-form-item label="声明文字">
+          <el-input v-model="pageConfig.disclaimerText" type="textarea" :rows="3" placeholder="免责声明文字内容" />
+        </el-form-item>
+        <el-form-item label="文字颜色">
+          <el-color-picker v-model="pageConfig.disclaimerColor" />
+          <span style="margin-left:8px; color:#999">{{ pageConfig.disclaimerColor }}</span>
+        </el-form-item>
+      </el-form>
+        </el-tab-pane>
+      </el-tabs>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSave" :loading="uploadLoading">保存</el-button>

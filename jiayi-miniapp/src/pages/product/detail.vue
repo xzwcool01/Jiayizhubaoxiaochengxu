@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { onLoad, onShareAppMessage } from '@dcloudio/uni-app'
 import MsIcon from '@/components/MsIcon.vue'
-import { getProduct, getSharePoster, PmsProduct } from '@/api/product'
+import { getProduct, getSharePoster, getProductPageConfig, PmsProduct, ProductPageConfig } from '@/api/product'
+import AiWearCard from '@/components/AiWearCard.vue'
+import VideoShowcase from '@/components/VideoShowcase.vue'
+import ProductGallery from '@/components/ProductGallery.vue'
+import DisclaimerFooter from '@/components/DisclaimerFooter.vue'
 
 const product = ref<PmsProduct | null>(null)
 const images = ref<string[]>([])
@@ -11,6 +15,8 @@ const loading = ref(true)
 const posterUrl = ref('')
 const showPoster = ref(false)
 const savingPoster = ref(false)
+const pageConfig = ref<ProductPageConfig | null>(null)
+const galleryImages = ref<string[]>([])
 
 function parseImages(p: PmsProduct): string[] {
   const list: string[] = []
@@ -124,7 +130,12 @@ onLoad((options) => {
       images.value = parseImages(res.data)
       specs.value = parseSpecs(res.data.specs)
       if (!specs.value.length) specs.value = extractSpecs(res.data.description || '')
-      getSharePoster(id).then(r => { if (r.code === 200) posterUrl.value = r.data }).catch(() => {})
+      getProductPageConfig(id).then(r => {
+        if (r.code === 200) {
+          pageConfig.value = r.data
+          galleryImages.value = Array.isArray(r.data.galleryImages) ? r.data.galleryImages : []
+        }
+      }).catch(() => {})
     }
     loading.value = false
   }).catch(() => { loading.value = false })
@@ -159,17 +170,15 @@ onShareAppMessage(() => {
     <view class="info-section" v-if="product">
       <view class="info-header">
         <view><text class="info-name">{{ product.name }}</text><text v-if="product.subtitle" class="info-sub">{{ product.subtitle }}</text></view>
-        <view class="info-share"><text>¥{{ formatPrice(product.price) }}</text></view>
       </view>
       <view class="info-price">
         ¥{{ formatPrice(product.price) }}
         <text v-if="product.originalPrice" style="font-size:24rpx;color:#999;text-decoration:line-through;margin-left:12rpx;font-weight:400">¥{{ formatPrice(product.originalPrice) }}</text>
       </view>
-      <view class="info-tags">
-        <view class="tag"><text>免运费</text></view>
-        <view class="tag"><text>7天无理由退换</text></view>
-        <view class="tag"><text>赠定制包装</text></view>
-      </view>
+      <!-- NEW: AI穿戴 + 抖音视频（价格下方、描述上方） -->
+      <AiWearCard v-if="pageConfig?.aiEnabled" />
+      <VideoShowcase v-if="pageConfig?.videoEnabled" :cover="pageConfig?.videoCover || images[0] || ''" :videoUrl="pageConfig?.videoUrl || ''" />
+      <!-- END NEW -->
       <view class="desc">
         <text class="desc-label">商品描述</text>
         <text class="desc-text" v-if="product.descriptionText">{{ product.descriptionText }}</text>
@@ -196,6 +205,10 @@ onShareAppMessage(() => {
         <text class="review-text">送朋友的结婚礼物，包装非常精美，朋友很喜欢。玫瑰金很显白。</text>
       </view>
     </view>
+    <!-- NEW: 竖向大图展示 + 免责声明（置于用户评价底部） -->
+    <ProductGallery v-if="pageConfig?.galleryEnabled" :images="galleryImages" />
+    <DisclaimerFooter v-if="pageConfig?.disclaimerEnabled" :content="pageConfig?.disclaimerText || ''" :textColor="pageConfig?.disclaimerColor || '#999'" />
+    <!-- END NEW -->
     <view class="bottom-bar">
       <view class="bar-icon"><text style="font-size:36rpx;color:#1C1B1B;">♡</text></view>
       <view class="bar-btn secondary" @tap="uni.switchTab({url:'/pages/cart/cart'})"><text>加入购物车</text></view>

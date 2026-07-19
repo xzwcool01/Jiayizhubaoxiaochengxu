@@ -104,3 +104,23 @@ export function deleteProduct(id: number) {
 export function getCategories() {
   return request.get<any, { code: number; data: Category[] }>('/admin/product/categories')
 }
+
+export interface ProductPageConfigDTO {
+  aiEnabled: number
+  videoEnabled: number
+  videoCover: string
+  videoUrl: string
+  galleryEnabled: number
+  galleryImages: string[]
+  disclaimerEnabled: number
+  disclaimerText: string
+  disclaimerColor: string
+}
+
+export function getProductPageConfig(productId: number) {
+  return request.get<any, { code: number; data: ProductPageConfigDTO }>('/admin/product/' + productId + '/page-config')
+}
+
+export function saveProductPageConfig(productId: number, data: ProductPageConfigDTO) {
+  return request.put<any, { code: number }>('/admin/product/' + productId + '/page-config', data)
+}
