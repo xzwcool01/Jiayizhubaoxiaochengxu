@@ -194,7 +194,13 @@ public class ProductController {
         } else if (dto.getMainImage() != null) {
             p.setMainImage(dto.getMainImage());
         }
-        p.setDescription(dto.getDescription());
+        p.setDescriptionText(dto.getDescriptionText());
+        p.setSpecs(dto.getSpecs());
+        if (dto.getDescriptionText() != null || dto.getSpecs() != null) {
+            p.setDescription(buildDescription(dto.getDescriptionText(), dto.getSpecs()));
+        } else {
+            p.setDescription(dto.getDescription());
+        }
         p.setPrice(dto.getPrice());
         p.setOriginalPrice(dto.getOriginalPrice());
         p.setPointsPrice(dto.getPointsPrice());
@@ -209,5 +215,51 @@ public class ProductController {
         p.setWeight(dto.getWeight());
         p.setStatus(dto.getStatus());
         p.setExtraAttrs(dto.getExtraAttrs());
+    }
+
+    private String buildDescription(String text, String specsJson) {
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n");
+        html.append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
+        html.append("<style>\n");
+        html.append("* { margin:0; padding:0; box-sizing:border-box; font-family:\"Microsoft YaHei\",SimSun,sans-serif; }\n");
+        html.append("body { padding:30px; background:#fff; color:#333; line-height:1.8; font-size:18px; }\n");
+        html.append(".desc-text { margin-bottom:50px; }\n");
+        html.append(".desc-text p { text-indent:2em; }\n");
+        html.append(".info-table { width:100%; border-collapse:collapse; }\n");
+        html.append(".info-table tr { border-bottom:1px solid #eee; }\n");
+        html.append(".info-table td { padding:18px 10px; }\n");
+        html.append(".info-table td:first-child { width:120px; color:#444; }\n");
+        html.append(".info-table td:last-child { text-align:right; color:#222; }\n");
+        html.append("</style>\n</head>\n<body>\n");
+
+        if (text != null && !text.isEmpty()) {
+            html.append("<div class=\"desc-text\">\n<p>").append(escapeHtml(text)).append("</p>\n</div>\n");
+        }
+
+        if (specsJson != null && !specsJson.isEmpty()) {
+            html.append("<table class=\"info-table\">\n");
+            try {
+                com.fasterxml.jackson.databind.JsonNode arr = objectMapper.readTree(specsJson);
+                if (arr.isArray()) {
+                    for (com.fasterxml.jackson.databind.JsonNode node : arr) {
+                        String label = node.has("label") ? node.get("label").asText("") : "";
+                        String value = node.has("value") ? node.get("value").asText("") : "";
+                        html.append("<tr><td>").append(escapeHtml(label)).append("</td><td>").append(escapeHtml(value)).append("</td></tr>\n");
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("解析specs JSON失败: {}", e.getMessage());
+            }
+            html.append("</table>\n");
+        }
+
+        html.append("</body>\n</html>");
+        return html.toString();
+    }
+
+    private String escapeHtml(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
     }
 }

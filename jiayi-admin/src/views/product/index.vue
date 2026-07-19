@@ -34,12 +34,13 @@ const editingId = ref<number | null>(null)
 const formRef = ref<any>(null)
 const form = reactive<ProductDTO>({
   categoryId: 0, productType: 0, name: '', subtitle: '', images: [],
-  description: '', price: 0, originalPrice: undefined, pointsPrice: 0,
+  description: '', descriptionText: '', specs: '', price: 0, originalPrice: undefined, pointsPrice: 0,
   stock: 0, flashStock: 0, saleStart: undefined, saleEnd: undefined,
   memberLevel: 0, isNew: 0, isRecommend: 0, sortOrder: 0, weight: 0, status: 1
 })
 const imageUrlList = ref<string[]>([])
 const uploadLoading = ref(false)
+const specsList = ref<{ label: string; value: string }[]>([])
 
 const showPrice = computed(() => form.productType !== 4)
 const showPoints = computed(() => form.productType === 4)
@@ -96,11 +97,13 @@ function openCreate() {
   dialogTitle.value = '新增商品'
   Object.assign(form, {
     categoryId: categories.value[0]?.id || 0, productType: 0, name: '', subtitle: '',
-    images: [], description: '', price: 0, originalPrice: undefined, pointsPrice: 0,
+    images: [], description: '', descriptionText: '', specs: '', price: 0,
+    originalPrice: undefined, pointsPrice: 0,
     stock: 0, flashStock: 0, saleStart: undefined, saleEnd: undefined,
     memberLevel: 0, isNew: 0, isRecommend: 0, sortOrder: 0, weight: 0, status: 1
   })
   imageUrlList.value = []
+  specsList.value = []
   dialogVisible.value = true
 }
 
@@ -114,10 +117,17 @@ async function openEdit(id: number) {
   if (p.images) {
     try { images = JSON.parse(p.images) } catch { images = [] }
   }
+  let parsedSpecs: { label: string; value: string }[] = []
+  if (p.specs) {
+    try { const arr = JSON.parse(p.specs); if (Array.isArray(arr)) parsedSpecs = arr } catch {}
+  }
+  specsList.value = parsedSpecs.length ? parsedSpecs : []
   Object.assign(form, {
     categoryId: p.categoryId, productType: p.productType, name: p.name,
     subtitle: p.subtitle || '', images: images.length ? images : p.mainImage ? [p.mainImage] : [],
-    description: p.description || '', price: p.price, originalPrice: p.originalPrice || undefined,
+    description: p.description || '', descriptionText: p.descriptionText || '',
+    specs: p.specs || (parsedSpecs.length ? JSON.stringify(parsedSpecs) : ''),
+    price: p.price, originalPrice: p.originalPrice || undefined,
     pointsPrice: p.pointsPrice || 0, stock: p.stock || 0, flashStock: p.flashStock || 0,
     saleStart: p.saleStart || undefined, saleEnd: p.saleEnd || undefined,
     memberLevel: p.memberLevel || 0, isNew: p.isNew || 0, isRecommend: p.isRecommend || 0,
@@ -164,12 +174,20 @@ function removeImage(index: number) {
   form.images = [...imageUrlList.value]
 }
 
+function addSpecRow() {
+  specsList.value.push({ label: '', value: '' })
+}
+function removeSpecRow(index: number) {
+  specsList.value.splice(index, 1)
+}
+
 async function handleSave() {
   if (!form.name) { ElMessage.warning('请输入商品名称'); return }
   if (!form.categoryId) { ElMessage.warning('请选择商品类目'); return }
   if (form.price == null || form.price <= 0) { ElMessage.warning('请输入有效价格'); return }
   if (showTimeRange.value && !form.saleStart) { ElMessage.warning('请设置开始时间'); return }
   if (showTimeRange.value && !form.saleEnd) { ElMessage.warning('请设置结束时间'); return }
+  form.specs = specsList.value.filter(s => s.label || s.value).length ? JSON.stringify(specsList.value.filter(s => s.label || s.value)) : ''
   try {
     if (editingId.value) {
       const res = await updateProduct(editingId.value, { ...form, images: imageUrlList.value })
@@ -386,8 +404,18 @@ function getMainImageUrl(row: PmsProduct): string {
         </el-form-item>
 
         <!-- Description -->
-        <el-form-item label="商品描述">
-          <el-input v-model="form.description" type="textarea" :rows="4" placeholder="商品详情描述（支持HTML）" />
+        <el-form-item label="商品介绍">
+          <el-input v-model="form.descriptionText" type="textarea" :rows="4" placeholder="输入商品介绍文字，无需写HTML标签" />
+        </el-form-item>
+        <el-form-item label="规格参数">
+          <div style="width:100%">
+            <div v-for="(s, i) in specsList" :key="i" style="display:flex; gap:8px; margin-bottom:8px; align-items:center">
+              <el-input v-model="s.label" placeholder="参数名称" style="width:160px" />
+              <el-input v-model="s.value" placeholder="参数内容" style="width:240px" />
+              <el-button size="small" type="danger" link @click="removeSpecRow(i)">删除</el-button>
+            </div>
+            <el-button size="small" @click="addSpecRow">+ 添加参数</el-button>
+          </div>
         </el-form-item>
 
         <!-- Flags -->

@@ -34,6 +34,8 @@ public class PmsProduct {
     private Integer sortOrder;
     private Integer weight;
     private Integer status;
+    private String descriptionText;
+    private String specs;
     private String extraAttrs;
     private String videoUrl;
     @TableLogic

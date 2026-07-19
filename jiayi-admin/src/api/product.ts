@@ -38,6 +38,8 @@ export interface ProductDTO {
   mainImage?: string
   images?: string[]
   description?: string
+  descriptionText?: string
+  specs?: string
   price: number
   originalPrice?: number
   pointsPrice?: number

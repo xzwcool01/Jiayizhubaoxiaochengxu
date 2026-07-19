@@ -16,7 +16,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/health", "/api/auth/**", "/api/user/**", "/api/admin/**", "/api/upload/**", "/api/level/**", "/uploads/**").permitAll()
+                .requestMatchers("/api/health", "/api/auth/**", "/api/user/**", "/api/admin/**", "/api/upload/**", "/api/level/**", "/api/product/**", "/api/share/**", "/uploads/**").permitAll()
                 .anyRequest().authenticated()
             );
         return http.build();

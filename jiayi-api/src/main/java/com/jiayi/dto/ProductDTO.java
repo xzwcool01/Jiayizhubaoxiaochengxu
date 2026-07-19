@@ -14,6 +14,8 @@ public class ProductDTO {
     private String mainImage;
     private List<String> images;
     private String description;
+    private String descriptionText;
+    private String specs;
     private BigDecimal price;
     private BigDecimal originalPrice;
     private Integer pointsPrice;

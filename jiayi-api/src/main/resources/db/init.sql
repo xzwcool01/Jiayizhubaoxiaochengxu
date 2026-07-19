@@ -60,6 +60,8 @@ CREATE TABLE IF NOT EXISTS pms_product (
     main_image VARCHAR(500),
     images TEXT COMMENT 'JSON 数组，多张图片URL',
     description TEXT,
+    description_text TEXT COMMENT '商品介绍（纯文本，不含HTML）',
+    specs TEXT COMMENT '规格参数 JSON [{label,value}]',
     price DECIMAL(10,2) NOT NULL COMMENT '当前售价',
     original_price DECIMAL(10,2) COMMENT '划线原价',
     points_price INT DEFAULT 0 COMMENT '积分价（积分商城专用）',
