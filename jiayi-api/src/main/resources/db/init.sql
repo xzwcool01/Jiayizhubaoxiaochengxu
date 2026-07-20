@@ -118,6 +118,131 @@ CREATE TABLE IF NOT EXISTS ums_user_favorite (
     UNIQUE KEY uk_user_product (user_id, product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- [购物车] 用户购物车表
+CREATE TABLE IF NOT EXISTS ums_user_cart (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL COMMENT '用户ID(对应ums_user.id)',
+    product_id BIGINT NOT NULL COMMENT '商品ID(对应pms_product.id)',
+    quantity INT DEFAULT 1 COMMENT '数量',
+    selected TINYINT(1) DEFAULT 1 COMMENT '是否选中',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_user_product (user_id, product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- [地址] 用户收货地址
+CREATE TABLE IF NOT EXISTS ums_user_address (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    name VARCHAR(50) NOT NULL COMMENT '收件人',
+    phone VARCHAR(20) NOT NULL COMMENT '手机号',
+    province VARCHAR(50) DEFAULT '' COMMENT '省',
+    city VARCHAR(50) DEFAULT '' COMMENT '市',
+    district VARCHAR(50) DEFAULT '' COMMENT '区',
+    detail VARCHAR(200) NOT NULL COMMENT '详细地址',
+    is_default TINYINT(1) DEFAULT 0 COMMENT '是否默认',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- [优惠券] 优惠券定义
+CREATE TABLE IF NOT EXISTS sms_coupon (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL COMMENT '券名称',
+    type TINYINT NOT NULL COMMENT '0-满减 1-折扣',
+    value DECIMAL(10,2) NOT NULL COMMENT '满减=减金额 折扣=折扣率%%',
+    min_amount DECIMAL(10,2) DEFAULT 0 COMMENT '最低订单金额 0=无门槛',
+    max_amount DECIMAL(10,2) DEFAULT 0 COMMENT '最高抵扣 0=不限',
+    start_time DATETIME NOT NULL COMMENT '有效期开始',
+    end_time DATETIME NOT NULL COMMENT '有效期结束',
+    total_count INT DEFAULT 0 COMMENT '发行总量',
+    per_user_limit INT DEFAULT 1 COMMENT '每用户限领',
+    used_count INT DEFAULT 0 COMMENT '已使用',
+    status TINYINT DEFAULT 1 COMMENT '0-下架 1-上架',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- [优惠券-商品] 优惠券可用商品（空=全部可用）
+CREATE TABLE IF NOT EXISTS sms_coupon_product (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    coupon_id BIGINT NOT NULL,
+    product_id BIGINT DEFAULT NULL COMMENT '空=全部商品可用',
+    UNIQUE KEY uk_coupon_product (coupon_id, product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- [用户优惠券] 用户领券记录
+CREATE TABLE IF NOT EXISTS sms_user_coupon (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    coupon_id BIGINT NOT NULL,
+    used TINYINT(1) DEFAULT 0 COMMENT '0-未用 1-已用',
+    order_id BIGINT DEFAULT NULL COMMENT '使用订单ID',
+    used_time DATETIME DEFAULT NULL,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user (user_id),
+    INDEX idx_coupon (coupon_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- [积分规则] 多少积分抵多少钱
+CREATE TABLE IF NOT EXISTS sms_points_rule (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    points INT NOT NULL COMMENT '所需积分数',
+    amount DECIMAL(10,2) NOT NULL COMMENT '抵扣金额',
+    type TINYINT DEFAULT 0 COMMENT '0-固定抵扣(固定积分换固定金额) 1-全积分抵扣(所有积分按比例换)',
+    status TINYINT DEFAULT 1 COMMENT '0-禁用 1-启用',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE sms_points_rule ADD COLUMN IF NOT EXISTS type TINYINT DEFAULT 0 COMMENT '0-固定抵扣 1-全积分抵扣' after amount;
+
+-- [积分适用商品] 空=全部商品可用
+CREATE TABLE IF NOT EXISTS sms_points_product (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    rule_id BIGINT NOT NULL,
+    product_id BIGINT DEFAULT NULL COMMENT '空=全部商品可用',
+    UNIQUE KEY uk_rule_product (rule_id, product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- [订单] 主订单
+CREATE TABLE IF NOT EXISTS oms_order (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_sn VARCHAR(64) NOT NULL UNIQUE COMMENT '订单号',
+    user_id BIGINT NOT NULL,
+    total_amount DECIMAL(10,2) NOT NULL COMMENT '商品总额',
+    pay_amount DECIMAL(10,2) NOT NULL COMMENT '实付金额',
+    coupon_amount DECIMAL(10,2) DEFAULT 0 COMMENT '优惠券抵扣',
+    points_amount DECIMAL(10,2) DEFAULT 0 COMMENT '积分抵扣',
+    points_deduct INT DEFAULT 0 COMMENT '消耗积分数',
+    freight_amount DECIMAL(10,2) DEFAULT 0 COMMENT '运费',
+    payment_method TINYINT DEFAULT 0 COMMENT '0-未支付 1-微信支付',
+    status TINYINT DEFAULT 0 COMMENT '0-待付款 1-已付款 2-已发货 3-已完成 4-已取消',
+    address_snapshot JSON COMMENT '地址快照',
+    note VARCHAR(500) DEFAULT '' COMMENT '买家备注',
+    paid_at DATETIME DEFAULT NULL COMMENT '支付时间',
+    coupon_id BIGINT DEFAULT NULL COMMENT '使用的优惠券ID',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user (user_id),
+    INDEX idx_sn (order_sn),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- [订单商品] 订单商品快照
+CREATE TABLE IF NOT EXISTS oms_order_item (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    product_name VARCHAR(200) NOT NULL,
+    product_specs TEXT COMMENT '规格快照',
+    product_image VARCHAR(500) COMMENT '商品主图',
+    price DECIMAL(10,2) NOT NULL COMMENT '下单时单价',
+    quantity INT NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL,
+    INDEX idx_order (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS ums_member_signin (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,

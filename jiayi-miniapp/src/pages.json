@@ -13,7 +13,12 @@
     {"path": "pages/product/detail", "style": {"navigationStyle": "custom"}},
     {"path": "pages/member/index", "style": {"navigationStyle": "custom"}},
     {"path": "pages/webview/webview", "style": {"navigationStyle": "custom"}},
-    {"path": "pages/favorite/index", "style": {"navigationStyle": "custom"}}
+    {"path": "pages/favorite/index", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/address/index", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/order/confirm", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/order/list", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/order/detail", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/order/success", "style": {"navigationStyle": "custom"}}
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",

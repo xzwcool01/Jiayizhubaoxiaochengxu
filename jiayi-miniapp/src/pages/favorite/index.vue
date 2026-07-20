@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onShow } from '@dcloudio/uni-app'
+import { ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import MsIcon from '@/components/MsIcon.vue'
 import { getFavoriteList, removeFavorite } from '@/api/favorite'
 import type { PmsProduct } from '@/api/product'
@@ -7,7 +8,15 @@ import type { PmsProduct } from '@/api/product'
 const list = ref<PmsProduct[]>([])
 const loading = ref(false)
 
+function checkLogin(): boolean {
+  if (uni.getStorageSync('token')) return true
+  uni.showToast({ title: '请先登录', icon: 'none' })
+  uni.switchTab({ url: '/pages/my/my' })
+  return false
+}
+
 async function fetchData() {
+  if (!checkLogin()) return
   loading.value = true
   try {
     const res = await getFavoriteList()
@@ -17,6 +26,7 @@ async function fetchData() {
 }
 
 async function handleRemove(productId: number) {
+  if (!checkLogin()) return
   try {
     const res = await removeFavorite(productId)
     if (res.code === 200) {

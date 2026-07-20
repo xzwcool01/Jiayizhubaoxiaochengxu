@@ -22,11 +22,17 @@ public class FavoriteController {
         this.userService = userService;
     }
 
+    private UmsUser getUserOrThrow(String openid) {
+        R<UmsUser> r = userService.getUserInfo(openid);
+        if (r.getCode() != 200 || r.getData() == null) return null;
+        return r.getData();
+    }
+
     @PostMapping("/toggle")
     public R<Boolean> toggle(@RequestBody Map<String, Object> body) {
         String openid = (String) body.get("openid");
         Long productId = Long.valueOf(body.get("productId").toString());
-        UmsUser user = userService.getUserInfo(openid);
+        UmsUser user = getUserOrThrow(openid);
         if (user == null) return R.error("用户未找到");
         boolean liked = favoriteService.toggle(user.getId(), productId);
         return R.ok(liked);
@@ -34,14 +40,14 @@ public class FavoriteController {
 
     @GetMapping("/status")
     public R<Boolean> status(@RequestParam String openid, @RequestParam Long productId) {
-        UmsUser user = userService.getUserInfo(openid);
+        UmsUser user = getUserOrThrow(openid);
         if (user == null) return R.ok(false);
         return R.ok(favoriteService.isFavorited(user.getId(), productId));
     }
 
     @GetMapping("/list")
     public R<List<PmsProduct>> list(@RequestParam String openid) {
-        UmsUser user = userService.getUserInfo(openid);
+        UmsUser user = getUserOrThrow(openid);
         if (user == null) return R.ok(List.of());
         return R.ok(favoriteService.listByUser(user.getId()));
     }
@@ -50,7 +56,7 @@ public class FavoriteController {
     public R<Void> remove(@RequestBody Map<String, Object> body) {
         String openid = (String) body.get("openid");
         Long productId = Long.valueOf(body.get("productId").toString());
-        UmsUser user = userService.getUserInfo(openid);
+        UmsUser user = getUserOrThrow(openid);
         if (user == null) return R.error("用户未找到");
         favoriteService.toggle(user.getId(), productId);
         return R.ok(null);

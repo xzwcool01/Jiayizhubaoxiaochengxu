@@ -18,7 +18,11 @@ const routes: RouteRecordRaw[] = [
       { path: 'level', name: 'Level', component: () => import('@/views/level/index.vue'), meta: { title: '等级配置' } },
       { path: 'content', name: 'Content', component: () => import('@/views/content/index.vue'), meta: { title: '内容管理' } },
       { path: 'settings', name: 'Settings', component: () => import('@/views/settings/index.vue'), meta: { title: '系统设置' } },
-      { path: 'favorite', name: 'Favorite', component: () => import('@/views/favorite/index.vue'), meta: { title: '收藏管理' } }
+      { path: 'favorite', name: 'Favorite', component: () => import('@/views/favorite/index.vue'), meta: { title: '收藏管理' } },
+      { path: 'cart', name: 'Cart', component: () => import('@/views/cart/index.vue'), meta: { title: '购物车管理' } },
+      { path: 'coupon', name: 'Coupon', component: () => import('@/views/coupon/index.vue'), meta: { title: '优惠券管理' } },
+      { path: 'points', name: 'Points', component: () => import('@/views/points/index.vue'), meta: { title: '积分规则' } },
+      { path: 'address', name: 'Address', component: () => import('@/views/address/index.vue'), meta: { title: '地址管理' } }
     ]
   }
 ]

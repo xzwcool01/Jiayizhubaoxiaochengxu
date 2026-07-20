@@ -12,7 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/product")
@@ -52,6 +53,33 @@ public class PublicProductController {
                 PmsCategory c = categoryMapper.selectById(p.getCategoryId());
                 if (c != null) p.setCategoryName(c.getName());
             }
+        }
+        return R.ok(result);
+    }
+
+    @GetMapping("/recommend")
+    public R<List<PmsProduct>> recommend(@RequestParam(required = false) Long categoryId) {
+        List<PmsProduct> result = new ArrayList<>();
+        if (categoryId != null) {
+            List<PmsProduct> same = productService.list(new LambdaQueryWrapper<PmsProduct>()
+                    .eq(PmsProduct::getStatus, 1)
+                    .eq(PmsProduct::getProductType, 0)
+                    .eq(PmsProduct::getCategoryId, categoryId)
+                    .orderByDesc(PmsProduct::getWeight)
+                    .orderByDesc(PmsProduct::getSortOrder)
+                    .orderByDesc(PmsProduct::getId));
+            if (!same.isEmpty()) result.add(same.get(0));
+        }
+        List<PmsProduct> others = productService.list(new LambdaQueryWrapper<PmsProduct>()
+                .eq(PmsProduct::getStatus, 1)
+                .eq(PmsProduct::getProductType, 0)
+                .ne(categoryId != null, PmsProduct::getCategoryId, categoryId)
+                .orderByDesc(PmsProduct::getWeight)
+                .orderByDesc(PmsProduct::getSortOrder)
+                .orderByDesc(PmsProduct::getId));
+        for (PmsProduct p : others) {
+            if (result.size() >= 3) break;
+            result.add(p);
         }
         return R.ok(result);
     }

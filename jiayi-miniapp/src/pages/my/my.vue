@@ -75,6 +75,9 @@ function goPoints() {
 }
 function onMenuTap(m: any) {
   if (m.label === '我的收藏') { uni.navigateTo({ url: '/pages/favorite/index' }); return }
+  if (m.label === '我的订单') { uni.navigateTo({ url: '/pages/order/list' }); return }
+  if (m.label === '收货地址') { uni.navigateTo({ url: '/pages/address/index' }); return }
+  if (m.label === '优惠券') { uni.switchTab({ url: '/pages/my/my' }); uni.showToast({ title: '功能开发中', icon: 'none' }); return }
   uni.showToast({ title: m.label + '（开发中）', icon: 'none' })
 }
 

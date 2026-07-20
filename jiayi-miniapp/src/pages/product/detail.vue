@@ -4,6 +4,7 @@ import { onLoad, onShareAppMessage } from '@dcloudio/uni-app'
 import MsIcon from '@/components/MsIcon.vue'
 import { getProduct, getSharePoster, getProductPageConfig, PmsProduct, ProductPageConfig } from '@/api/product'
 import { toggleFavorite, getFavoriteStatus } from '@/api/favorite'
+import { addToCart } from '@/api/cart'
 import AiWearCard from '@/components/AiWearCard.vue'
 import VideoShowcase from '@/components/VideoShowcase.vue'
 import ProductGallery from '@/components/ProductGallery.vue'
@@ -21,8 +22,27 @@ const galleryImages = ref<string[]>([])
 const isFavorited = ref(false)
 const favoriting = ref(false)
 
+async function handleAddCart() {
+  if (!product.value) return
+  if (!uni.getStorageSync('token')) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    uni.switchTab({ url: '/pages/my/my' })
+    return
+  }
+  try {
+    await addToCart(product.value.id)
+    uni.showToast({ title: '已加入购物车', icon: 'success' })
+  } catch { uni.showToast({ title: '操作失败', icon: 'none' }) }
+}
+
 async function toggleFav() {
   if (!product.value || favoriting.value) return
+  const token = uni.getStorageSync('token') || ''
+  if (!token) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    uni.switchTab({ url: '/pages/my/my' })
+    return
+  }
   favoriting.value = true
   try {
     const res = await toggleFavorite(product.value.id)
@@ -149,7 +169,9 @@ onLoad((options) => {
           galleryImages.value = Array.isArray(r.data.galleryImages) ? r.data.galleryImages : []
         }
       }).catch(() => {})
-      getFavoriteStatus(id).then(r => { if (r.code === 200) isFavorited.value = r.data }).catch(() => {})
+      if (uni.getStorageSync('token')) {
+        getFavoriteStatus(id).then(r => { if (r.code === 200) isFavorited.value = r.data }).catch(() => {})
+      }
     }
     loading.value = false
   }).catch(() => { loading.value = false })
@@ -225,7 +247,7 @@ onShareAppMessage(() => {
     <!-- END NEW -->
     <view class="bottom-bar">
       <view class="bar-icon" @tap="toggleFav"><text :class="['fav-icon', isFavorited ? 'fav-active' : 'fav-inactive']">{{ isFavorited ? '♥' : '♡' }}</text></view>
-      <view class="bar-btn secondary" @tap="uni.switchTab({url:'/pages/cart/cart'})"><text>加入购物车</text></view>
+      <view class="bar-btn secondary" @tap="handleAddCart"><text>加入购物车</text></view>
       <view class="bar-btn primary"><text>立即购买</text></view>
     </view>
 

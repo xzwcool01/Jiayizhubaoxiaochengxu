@@ -14,7 +14,11 @@ const menuItems = [
   { path: '/level', icon: 'Coin', label: '等级配置' },
   { path: '/content', icon: 'EditPen', label: '内容管理' },
   { path: '/settings', icon: 'Setting', label: '系统设置' },
-  { path: '/favorite', icon: 'Star', label: '收藏管理' }
+  { path: '/favorite', icon: 'Star', label: '收藏管理' },
+  { path: '/cart', icon: 'ShoppingCart', label: '购物车管理' },
+  { path: '/coupon', icon: 'Ticket', label: '优惠券管理' },
+  { path: '/points', icon: 'Coin', label: '积分规则' },
+  { path: '/address', icon: 'Location', label: '地址管理' }
 ]
 
 function handleLogout() {

@@ -37,3 +37,11 @@ export function get<T = any>(url: string, data?: any): Promise<R<T>> {
 export function post<T = any>(url: string, data?: any): Promise<R<T>> {
   return request<T>({ url, method: 'POST', data })
 }
+
+export function put<T = any>(url: string, data?: any): Promise<R<T>> {
+  return request<T>({ url, method: 'PUT', data })
+}
+
+export function remove<T = any>(url: string, data?: any): Promise<R<T>> {
+  return request<T>({ url, method: 'DELETE', data })
+}

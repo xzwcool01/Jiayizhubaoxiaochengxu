@@ -1,0 +1,30 @@
+package com.jiayi.controller;
+
+import com.jiayi.common.R;
+import com.jiayi.dto.UserCouponVO;
+import com.jiayi.entity.UmsUser;
+import com.jiayi.service.CouponService;
+import com.jiayi.service.UmsUserService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/coupon")
+public class CouponController {
+
+    private final CouponService couponService;
+    private final UmsUserService userService;
+
+    public CouponController(CouponService couponService, UmsUserService userService) {
+        this.couponService = couponService;
+        this.userService = userService;
+    }
+
+    @GetMapping("/my")
+    public R<List<UserCouponVO>> my(@RequestParam String openid) {
+        R<UmsUser> r = userService.getUserInfo(openid);
+        if (r.getCode() != 200 || r.getData() == null) return R.ok(List.of());
+        return R.ok(couponService.getUserCoupons(r.getData().getId()));
+    }
+}

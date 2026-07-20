@@ -1,92 +1,199 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import NavBar from '@/components/NavBar.vue'
-const cartItems = [
-  { name: '星芒系列 · 钻戒', spec: '18K白金 / 50分 / 12号', price: '12,800.00', qty: 1, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDHKoMjQjLvRNxgGAwZtB9fZqONz6PvyP8wWDQA-HGUd6wVRDDI126_IZdoL7HXZkEraHheoVdS7kBDWy32Ex1LzQ7VZ6VSk6ahqgkA9kdj_lVV5uN46KshykGpv4f8axbb-EpPaQMDhCXGU1AuIcr7YrFebGMl8nzXthID37pWD_0z6B0IX-5lTm3oPLAmZz9J_byGujzIVVsfwLSji2kSSiYBcAMeJOL73UvBW06SE1bd66Kwmm5yOQ' },
-  { name: '月光泪 · 蓝宝石项链', spec: '18K黄金 / 0.8克拉', price: '8,500.00', qty: 1, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCDBjVBBNKFvbEcqM12vQB4dzloLk0bAORJsVnp8P0kOQU2fi4YbWmT7OcdIwaPS_xPPDZNbEfsDaUYZXeh95eAbJjtN--OL2ZIAQwudLaM79bLFayB83f_PzUsKYaQ54PiavGq3dtKV6-RcaRtvagUk_bhE5axr2CXWuXVKpBeGp4WOhLfn-k8ClgPId2XUu2SOOu4sn48j_q0w9w7OQM_7ANIKNSD0kJexXjElhNzJOaYeMZNJKKC4Q' },
-  { name: '初露 · 珍珠耳饰', spec: 'Akoya海水珍珠 / 8mm', price: '4,280.00', qty: 1, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCwmhOO0omlnXEkb_yoPvN5e2wp3MS1l2aJBL_v7YYA2xjd5vjeJyc1y1I-rEdklQF0KCl0YKP_w1IdbEXQgHyvB7ggF4gKXygKZp1VBI7Ax8UsDKAR92CV8YioAbRWVuqWTDRZX5yHfzUD3ePdngexajDbKgmS_i_S3lDEeQ-GVIAmwvxf_NmNhA6af7YRJW6NG974XLvIqcQ0TL1sHvGoeIe7zKuxDanD2jR00f5McokvNGTR2EoY3w' }
-]
+import { getCartList, updateQuantity, updateSelected, toggleSelectAll, removeCartItem, type CartItemVO } from '@/api/cart'
+import { getProductList } from '@/api/product'
+import type { PmsProduct } from '@/api/product'
 
-function goDetail() { uni.navigateTo({ url: '/pages/product/detail' }) }
+const items = ref<CartItemVO[]>([])
+const loading = ref(false)
+const recommends = ref<PmsProduct[]>([])
 
+async function fetchData() {
+  if (!uni.getStorageSync('token')) { items.value = []; return }
+  loading.value = true
+  try {
+    const res = await getCartList()
+    if (res.code === 200) items.value = res.data || []
+  } catch { uni.showToast({ title: '加载失败', icon: 'none' }) }
+  finally { loading.value = false }
+  fetchRecommend()
+}
+
+async function fetchRecommend() {
+  try {
+    let categoryId: number | undefined
+    for (const item of items.value) {
+      if (item.categoryId) { categoryId = item.categoryId; break }
+    }
+    const res = await getProductList({ page: 1, size: 50, productType: 0 })
+    if (res.code !== 200 || !res.data?.records) { recommends.value = []; return }
+    const all = res.data.records.filter(p => p.status === 1)
+    const same = categoryId ? all.filter(p => p.categoryId === categoryId) : []
+    const other = categoryId ? all.filter(p => p.categoryId !== categoryId) : all
+    const picked: PmsProduct[] = []
+    if (same.length > 0) picked.push(same[0])
+    for (const p of other) { if (picked.length >= 3) break; picked.push(p) }
+    if (picked.length === 0 && all.length > 0) {
+      for (const p of all) { if (picked.length >= 3) break; picked.push(p) }
+    }
+    recommends.value = picked
+  } catch { recommends.value = [] }
+}
+
+const allSelected = computed({
+  get: () => items.value.length > 0 && items.value.every(i => i.selected),
+  set: async (val: boolean) => {
+    items.value.forEach(i => i.selected = val)
+    try { await toggleSelectAll(val) } catch {}
+  }
+})
+
+const totalPrice = computed(() => {
+  return items.value
+    .filter(i => i.selected)
+    .reduce((sum, i) => sum + i.price * i.quantity, 0)
+})
+
+const selectedCount = computed(() => items.value.filter(i => i.selected).length)
+
+async function handleQty(item: CartItemVO, delta: number) {
+  const prevQty = item.quantity
+  const newQty = Math.max(0, prevQty + delta)
+  item.quantity = newQty
+  if (newQty === 0 && item.selected) {
+    item.selected = false
+    try { await Promise.all([updateQuantity(item.id, 0), updateSelected(item.id, false)]) } catch {}
+  } else if (prevQty === 0 && newQty === 1 && !item.selected) {
+    item.selected = true
+    try { await Promise.all([updateQuantity(item.id, 1), updateSelected(item.id, true)]) } catch {}
+  } else {
+    try { await updateQuantity(item.id, newQty) } catch {}
+  }
+}
+
+async function handleSelected(item: CartItemVO) {
+  item.selected = !item.selected
+  try { await updateSelected(item.id, item.selected) } catch {}
+}
+
+async function handleRemove(item: CartItemVO) {
+  try {
+    await removeCartItem(item.id)
+    items.value = items.value.filter(i => i.id !== item.id)
+    uni.showToast({ title: '已移除', icon: 'success' })
+  } catch { uni.showToast({ title: '操作失败', icon: 'none' }) }
+}
+
+function handleCheckout() {
+  if (!selectedCount.value) { uni.showToast({ title: '请选择商品', icon: 'none' }); return }
+  uni.navigateTo({ url: '/pages/order/confirm' })
+}
+
+function parseSpecs(raw: string | undefined | null): string {
+  if (!raw) return ''
+  try {
+    const arr = JSON.parse(raw)
+    return Array.isArray(arr) ? arr.map((s: any) => s.value || s).join(' / ') : ''
+  } catch { return '' }
+}
+
+onShow(fetchData)
 </script>
 
 <template>
   <view class="page">
     <view class="top-bar"><text class="top-title">购物车</text></view>
     <scroll-view class="list" scroll-y>
-      <view v-for="(item, i) in cartItems" :key="i" class="cart-item">
-        <view class="item-checkbox" />
-        <image class="item-img" :src="item.img" mode="aspectFill" />
+      <view v-for="item in items" :key="item.id" class="cart-item">
+        <view class="item-checkbox" :class="{ checked: item.selected }" @tap="handleSelected(item)" />
+        <image class="item-img" :src="item.mainImage || ''" mode="aspectFill" @tap="uni.navigateTo({ url: '/pages/product/detail?id=' + item.productId })" />
         <view class="item-info">
-          <text class="item-name">{{ item.name }}</text>
-          <text class="item-spec">{{ item.spec }}</text>
+          <text class="item-name" @tap="uni.navigateTo({ url: '/pages/product/detail?id=' + item.productId })">{{ item.name }}</text>
+          <text class="item-spec">{{ parseSpecs(item.specs) }}</text>
           <view class="item-bottom">
-            <text class="item-price">¥{{ item.price }}</text>
+            <text class="item-price">¥{{ (item.price * item.quantity).toLocaleString() }}</text>
             <view class="item-qty">
-              <text class="qty-btn">−</text>
-              <text class="qty-num">{{ item.qty }}</text>
-              <text class="qty-btn">+</text>
+              <text class="qty-btn" @tap="handleQty(item, -1)">−</text>
+              <text class="qty-num">{{ item.quantity }}</text>
+              <text class="qty-btn" @tap="handleQty(item, 1)">+</text>
             </view>
           </view>
+          <text class="item-remove" @tap="handleRemove(item)">删除</text>
         </view>
+      </view>
+      <view v-if="!items.length && !loading" class="empty-cart"><text class="empty-text">购物车是空的</text></view>
+
+      <view class="recommend-section" v-if="recommends.length">
+        <view class="rec-header">
+          <text class="rec-title">猜你喜欢</text>
+        </view>
+        <scroll-view class="rec-scroll" scroll-x enhanced show-scrollbar="false">
+          <view class="rec-inner">
+            <view v-for="p in recommends" :key="p.id" class="rec-card" @tap="uni.navigateTo({ url: '/pages/product/detail?id=' + p.id })">
+              <image class="rec-img" :src="p.mainImage || ''" mode="aspectFill" />
+              <view class="rec-info">
+                <text class="rec-name">{{ p.name }}</text>
+                <view class="rec-price"><text style="font-size:22rpx">¥</text><text style="font-size:28rpx;font-weight:bold"> {{ Math.floor(p.price).toLocaleString() }}</text></view>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
       </view>
     </scroll-view>
 
-    <view class="recommend-section">
-      <view class="rec-header">
-        <text class="rec-title">你可能还喜欢</text>
-        <text class="rec-more">查看更多 ›</text>
-      </view>
-      <scroll-view class="rec-scroll" scroll-x enhanced show-scrollbar="false">
-        <view v-for="(item, i) in cartItems" :key="'r'+i" class="rec-card" @tap="goDetail">
-          <image class="rec-img" :src="item.img" mode="aspectFill" />
-          <text class="rec-name">{{ item.name }}</text>
-          <text class="rec-price">¥{{ item.price }}</text>
-        </view>
-      </scroll-view>
-    </view>
-
     <view class="bottom-bar">
-      <view class="total">
-        <text class="total-label">合计: </text>
-        <text class="total-price">¥{{ (12800 + 8500 + 4280).toLocaleString() }}.00</text>
+      <view class="bottom-left">
+        <view class="item-checkbox" :class="{ checked: allSelected }" @tap="allSelected = !allSelected" />
+        <text class="all-label">全选</text>
       </view>
-      <view class="checkout-btn"><text class="checkout-text">结算 (3)</text></view>
+      <view class="bottom-right">
+        <text class="total-label">合计: </text>
+        <text class="total-price">¥{{ totalPrice.toLocaleString() }}</text>
+        <view class="checkout-btn" @tap="handleCheckout"><text class="checkout-text">结算 ({{ selectedCount }})</text></view>
+      </view>
     </view>
   </view>
-
   <NavBar :active="3" />
 </template>
 
 <style scoped>
-.page { background-color: #FAFAF8; height: 100vh; display: flex; flex-direction: column; padding-bottom: 160rpx; box-sizing: border-box; }
-.top-bar { display: flex; align-items: center; justify-content: flex-start; height: 112rpx; padding: 0 32rpx; background-color: rgba(255,255,255,0.8); }
-.top-title { font-size: 40rpx; font-weight: 600; color: #1C1B1B; }
-.list { flex: 1; padding: 24rpx; }
-.cart-item { display: flex; align-items: center; gap: 24rpx; background-color: #fff; border-radius: 24rpx; padding: 24rpx; margin-bottom: 16rpx; }
-.item-checkbox { width: 36rpx; height: 36rpx; border-radius: 50%; border: 3rpx solid #775836; background-color: #775836; }
-.item-img { width: 160rpx; height: 160rpx; border-radius: 16rpx; flex-shrink: 0; }
-.item-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; height: 160rpx; min-width: 0; }
-.item-name { font-size: 28rpx; color: #1C1B1B; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.item-spec { font-size: 22rpx; color: #605E5A; }
-.item-bottom { display: flex; justify-content: space-between; align-items: center; }
-.item-price { font-size: 30rpx; color: #775836; font-weight: bold; }
-.item-qty { display: flex; align-items: center; border: 2rpx solid #D9D2CC; border-radius: 40rpx; }
-.qty-btn { width: 48rpx; height: 48rpx; display: flex; align-items: center; justify-content: center; font-size: 28rpx; color: #605E5A; }
-.qty-num { width: 56rpx; text-align: center; font-size: 24rpx; font-weight: bold; }
-.recommend-section { padding: 32rpx 24rpx; }
-.rec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24rpx; }
+.page { background-color: #FAFAF8; height: 100vh; width: 100%; display: flex; flex-direction: column; padding-bottom: 240rpx; box-sizing: border-box; overflow-x: hidden; }
+.top-bar { display: flex; align-items: flex-end; justify-content: flex-start; height: 120rpx; padding: 0 32rpx 12rpx; background-color: rgba(255,255,255,0.8); flex-shrink: 0; box-sizing: border-box; }
+.top-title { font-size: 40rpx; font-weight: 600; color: #1C1B1B; line-height: 1.2; }
+.list { flex: 1; padding: 48rpx 32rpx; width: 100%; box-sizing: border-box; overflow-x: hidden; }
+.cart-item { display: flex; align-items: flex-start; gap: 12rpx; background-color: #ffffff; border-radius: 24rpx; padding: 20rpx; margin-bottom: 16rpx; box-sizing: border-box; overflow: hidden; width: 100%; max-width: 100%; }
+.item-checkbox { width: 32rpx; height: 32rpx; border-radius: 50%; border: 3rpx solid #D9D2CC; flex-shrink: 0; margin-top: 6rpx; }
+.item-checkbox.checked { background-color: #775836; border-color: #775836; }
+.item-img { width: 120rpx; height: 120rpx; border-radius: 14rpx; flex-shrink: 0; }
+.item-info { flex: 1; display: flex; flex-direction: column; min-width: 0; max-width: 100%; position: relative; box-sizing: border-box; overflow: hidden; }
+.item-name { font-size: 26rpx; color: #1C1B1B; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.item-spec { font-size: 22rpx; color: #605E5A; margin-top: 4rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.item-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 10rpx; max-width: 100%; overflow: hidden; }
+.item-price { font-size: 26rpx; color: #775836; font-weight: bold; flex-shrink: 0; }
+.item-qty { display: flex; align-items: center; border: 2rpx solid #D9D2CC; border-radius: 40rpx; flex-shrink: 0; }
+.qty-btn { width: 44rpx; height: 44rpx; display: flex; align-items: center; justify-content: center; font-size: 26rpx; color: #605E5A; }
+.qty-num { width: 48rpx; text-align: center; font-size: 24rpx; font-weight: bold; }
+.item-remove { font-size: 22rpx; color: #c0836a; margin-top: 6rpx; text-align: right; overflow: hidden; }
+.empty-cart { display: flex; align-items: center; justify-content: center; height: 200rpx; }
+.empty-text { font-size: 28rpx; color: #999; }
+.recommend-section { margin-top: 36rpx; }
+.rec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20rpx; }
 .rec-title { font-size: 34rpx; font-weight: 600; color: #1C1B1B; }
-.rec-more { font-size: 22rpx; color: #605E5A; }
-.rec-scroll { display: flex; }
-.rec-card { width: 280rpx; margin-right: 24rpx; flex-shrink: 0; }
-.rec-img { width: 280rpx; height: 360rpx; border-radius: 24rpx; }
-.rec-name { font-size: 26rpx; color: #1C1B1B; margin-top: 8rpx; }
-.rec-price { font-size: 24rpx; color: #775836; font-weight: bold; }
-.bottom-bar { position: fixed; bottom: 120rpx; left: 32rpx; right: 32rpx; display: flex; align-items: center; justify-content: space-between; background-color: rgba(255,255,255,0.9); border-radius: 60rpx; padding: 16rpx 24rpx; box-shadow: 0 4rpx 24rpx rgba(0,0,0,0.08); }
+.rec-scroll { width: 100%; }
+.rec-inner { display: flex; flex-direction: row; gap: 20rpx; padding-right: 8rpx; }
+.rec-card { width: 280rpx; flex-shrink: 0; background-color: #fff; border-radius: 16rpx; overflow: hidden; box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); }
+.rec-img { width: 100%; height: 320rpx; }
+.rec-info { padding: 20rpx; }
+.rec-name { font-size: 28rpx; color: #1C1B1B; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rec-price { font-size: 28rpx; color: #775836; font-weight: bold; margin-top: 8rpx; }
+.bottom-bar { position: fixed; bottom: 160rpx; left: 32rpx; right: 32rpx; display: flex; align-items: center; justify-content: space-between; background-color: rgba(255,255,255,0.92); border-radius: 60rpx; padding: 14rpx 24rpx; box-shadow: 0 4rpx 24rpx rgba(0,0,0,0.08); }
+.bottom-left { display: flex; align-items: center; gap: 12rpx; }
+.all-label { font-size: 24rpx; color: #1C1B1B; }
+.bottom-right { display: flex; align-items: center; gap: 12rpx; }
 .total-label { font-size: 24rpx; color: #1C1B1B; }
-.total-price { font-size: 32rpx; color: #775836; font-weight: bold; }
-.checkout-btn { background-color: #775836; padding: 20rpx 56rpx; border-radius: 60rpx; }
-.checkout-text { color: #fff; font-size: 28rpx; font-weight: bold; }
-
+.total-price { font-size: 30rpx; color: #775836; font-weight: bold; }
+.checkout-btn { background-color: #775836; padding: 18rpx 36rpx; border-radius: 60rpx; }
+.checkout-text { color: #fff; font-size: 26rpx; font-weight: bold; }
 </style>
