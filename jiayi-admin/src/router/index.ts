@@ -17,7 +17,8 @@ const routes: RouteRecordRaw[] = [
       { path: 'user', name: 'User', component: () => import('@/views/user/index.vue'), meta: { title: '会员管理' } },
       { path: 'level', name: 'Level', component: () => import('@/views/level/index.vue'), meta: { title: '等级配置' } },
       { path: 'content', name: 'Content', component: () => import('@/views/content/index.vue'), meta: { title: '内容管理' } },
-      { path: 'settings', name: 'Settings', component: () => import('@/views/settings/index.vue'), meta: { title: '系统设置' } }
+      { path: 'settings', name: 'Settings', component: () => import('@/views/settings/index.vue'), meta: { title: '系统设置' } },
+      { path: 'favorite', name: 'Favorite', component: () => import('@/views/favorite/index.vue'), meta: { title: '收藏管理' } }
     ]
   }
 ]

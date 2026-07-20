@@ -109,6 +109,15 @@ CREATE TABLE IF NOT EXISTS pms_product_page_config (
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- [收藏] 用户收藏表（新增，不修改原有表）
+CREATE TABLE IF NOT EXISTS ums_user_favorite (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL COMMENT '用户ID(对应ums_user.id)',
+    product_id BIGINT NOT NULL COMMENT '商品ID(对应pms_product.id)',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_user_product (user_id, product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS ums_member_signin (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,

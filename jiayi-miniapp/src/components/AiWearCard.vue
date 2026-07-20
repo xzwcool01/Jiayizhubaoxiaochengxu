@@ -44,4 +44,7 @@ import MsIcon from './MsIcon.vue'
   70% { box-shadow: 0 0 0 12rpx rgba(232, 213, 192, 0); }
   100% { box-shadow: 0 0 0 0 rgba(232, 213, 192, 0); }
 }
+/* 新增：修复右侧溢出 + 与下方视频模块间距统一 */
+.ai-card { box-sizing: border-box; }
+.ai-wrap { margin-bottom: 48rpx; }
 </style>

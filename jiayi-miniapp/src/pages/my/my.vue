@@ -74,6 +74,7 @@ function goPoints() {
   uni.navigateTo({ url: '/pages/points/index' })
 }
 function onMenuTap(m: any) {
+  if (m.label === '我的收藏') { uni.navigateTo({ url: '/pages/favorite/index' }); return }
   uni.showToast({ title: m.label + '（开发中）', icon: 'none' })
 }
 

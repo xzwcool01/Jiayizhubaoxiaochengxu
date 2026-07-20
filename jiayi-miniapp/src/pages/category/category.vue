@@ -76,7 +76,6 @@ watch(activeCat, (idx) => {
         <view class="grid" v-if="!loading">
           <view v-for="(p, i) in products" :key="p.id" class="product-card" @tap="goDetail(p.id)">
             <image class="product-img" :src="getImageUrl(p)" mode="aspectFill" />
-            <view class="product-like"><text class="like-icon">♡</text></view>
             <view class="product-info">
               <text class="product-name">{{ p.name }}</text>
               <view class="product-price"><text style="font-size:24rpx">¥</text><text style="font-size:32rpx; font-weight:bold"> {{ p.price }}</text></view>

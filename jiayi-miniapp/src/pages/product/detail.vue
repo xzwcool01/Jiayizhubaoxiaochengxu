@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { onLoad, onShareAppMessage } from '@dcloudio/uni-app'
 import MsIcon from '@/components/MsIcon.vue'
 import { getProduct, getSharePoster, getProductPageConfig, PmsProduct, ProductPageConfig } from '@/api/product'
+import { toggleFavorite, getFavoriteStatus } from '@/api/favorite'
 import AiWearCard from '@/components/AiWearCard.vue'
 import VideoShowcase from '@/components/VideoShowcase.vue'
 import ProductGallery from '@/components/ProductGallery.vue'
@@ -17,6 +18,18 @@ const showPoster = ref(false)
 const savingPoster = ref(false)
 const pageConfig = ref<ProductPageConfig | null>(null)
 const galleryImages = ref<string[]>([])
+const isFavorited = ref(false)
+const favoriting = ref(false)
+
+async function toggleFav() {
+  if (!product.value || favoriting.value) return
+  favoriting.value = true
+  try {
+    const res = await toggleFavorite(product.value.id)
+    if (res.code === 200) isFavorited.value = res.data
+  } catch { uni.showToast({ title: '操作失败', icon: 'none' }) }
+  finally { favoriting.value = false }
+}
 
 function parseImages(p: PmsProduct): string[] {
   const list: string[] = []
@@ -136,6 +149,7 @@ onLoad((options) => {
           galleryImages.value = Array.isArray(r.data.galleryImages) ? r.data.galleryImages : []
         }
       }).catch(() => {})
+      getFavoriteStatus(id).then(r => { if (r.code === 200) isFavorited.value = r.data }).catch(() => {})
     }
     loading.value = false
   }).catch(() => { loading.value = false })
@@ -210,7 +224,7 @@ onShareAppMessage(() => {
     <DisclaimerFooter v-if="pageConfig?.disclaimerEnabled" :content="pageConfig?.disclaimerText || ''" :textColor="pageConfig?.disclaimerColor || '#999'" />
     <!-- END NEW -->
     <view class="bottom-bar">
-      <view class="bar-icon"><text style="font-size:36rpx;color:#1C1B1B;">♡</text></view>
+      <view class="bar-icon" @tap="toggleFav"><text :class="['fav-icon', isFavorited ? 'fav-active' : 'fav-inactive']">{{ isFavorited ? '♥' : '♡' }}</text></view>
       <view class="bar-btn secondary" @tap="uni.switchTab({url:'/pages/cart/cart'})"><text>加入购物车</text></view>
       <view class="bar-btn primary"><text>立即购买</text></view>
     </view>
@@ -273,6 +287,9 @@ onShareAppMessage(() => {
 .share-btn { background: none; border: none; padding: 0; margin: 0; line-height: 1; min-width: 0; width: auto; height: auto; display: inline-flex; align-items: center; }
 .share-btn::after { border: none; }
 .bar-icon { width: 80rpx; height: 80rpx; border-radius: 50%; background-color: #F0EBE7; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.fav-icon { font-size: 40rpx; line-height: 1; transition: color 0.2s; }
+.fav-inactive { color: #605E5A; }
+.fav-active { color: #CF6679; }
 .bar-btn { flex: 1; text-align: center; padding: 24rpx; border-radius: 16rpx; font-size: 28rpx; font-weight: bold; }
 .bar-btn.primary { background-color: #775836; color: #fff; }
 .bar-btn.secondary { border: 2rpx solid #D9D2CC; color: #775836; }
