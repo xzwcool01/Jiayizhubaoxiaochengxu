@@ -78,29 +78,46 @@ public class CouponService {
     }
 
     @Transactional
-    public void issueToUser(Long couponId, List<Long> userIds) {
+    public int issueToUser(Long couponId, List<Long> userIds) {
         SmsCoupon c = couponMapper.selectById(couponId);
-        if (c == null) return;
+        if (c == null) return 0;
+        int total = c.getTotalCount() != null ? c.getTotalCount() : Integer.MAX_VALUE;
+        int issued = c.getIssuedCount() != null ? c.getIssuedCount() : 0;
+        int remaining = total - issued;
+        if (remaining <= 0) return 0;
+        int count = 0;
         for (Long uid : userIds) {
-            long count = userCouponMapper.selectCount(new LambdaQueryWrapper<SmsUserCoupon>()
+            if (count >= remaining) break;
+            long exist = userCouponMapper.selectCount(new LambdaQueryWrapper<SmsUserCoupon>()
                     .eq(SmsUserCoupon::getUserId, uid)
                     .eq(SmsUserCoupon::getCouponId, couponId));
-            if (count >= c.getPerUserLimit()) continue;
+            if (exist >= c.getPerUserLimit()) continue;
             SmsUserCoupon uc = new SmsUserCoupon();
             uc.setUserId(uid);
             uc.setCouponId(couponId);
             uc.setUsed(false);
             userCouponMapper.insert(uc);
+            count++;
         }
+        if (count > 0) {
+            c.setIssuedCount(issued + count);
+            couponMapper.updateById(c);
+        }
+        return count;
     }
 
     @Transactional
-    public void issueToAllUsers(Long couponId) {
+    public int issueToAllUsers(Long couponId) {
         SmsCoupon c = couponMapper.selectById(couponId);
-        if (c == null) return;
+        if (c == null) return 0;
+        int total = c.getTotalCount() != null ? c.getTotalCount() : Integer.MAX_VALUE;
+        int issued = c.getIssuedCount() != null ? c.getIssuedCount() : 0;
+        int remaining = total - issued;
+        if (remaining <= 0) return 0;
         List<UmsUser> allUsers = userMapper.selectList(null);
         List<Long> ids = allUsers.stream().map(UmsUser::getId).collect(Collectors.toList());
-        issueToUser(couponId, ids);
+        if (ids.size() > remaining) ids = ids.subList(0, remaining);
+        return issueToUser(couponId, ids);
     }
 
     @Transactional
@@ -145,6 +162,7 @@ public class CouponService {
         vo.setTotalCount(c.getTotalCount());
         vo.setPerUserLimit(c.getPerUserLimit());
         vo.setUsedCount(c.getUsedCount());
+        vo.setIssuedCount(c.getIssuedCount());
         vo.setStatus(c.getStatus());
         List<SmsCouponProduct> links = couponProductMapper.selectList(
                 new LambdaQueryWrapper<SmsCouponProduct>().eq(SmsCouponProduct::getCouponId, c.getId()));
@@ -171,6 +189,7 @@ public class CouponService {
         c.setTotalCount(vo.getTotalCount());
         c.setPerUserLimit(vo.getPerUserLimit());
         c.setUsedCount(0);
+        c.setIssuedCount(0);
         c.setStatus(vo.getStatus());
         couponMapper.insert(c);
         saveProductLinks(c.getId(), vo.getProductIds());

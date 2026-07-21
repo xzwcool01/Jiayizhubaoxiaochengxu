@@ -6,10 +6,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jiayi.dto.CreateOrderDTO;
 import com.jiayi.dto.OrderVO;
 import com.jiayi.dto.OrderItemVO;
+import com.jiayi.dto.AdminOrderVO;
 import com.jiayi.entity.*;
 import com.jiayi.mapper.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,32 +28,35 @@ public class OrderService {
     private final UmsUserAddressMapper addressMapper;
     private final SmsCouponMapper couponMapper;
     private final SmsUserCouponMapper userCouponMapper;
-    private final SmsPointsRuleMapper pointsRuleMapper;
     private final PmsProductMapper productMapper;
     private final UmsUserMapper userMapper;
     private final CartService cartService;
     private final CouponService couponService;
     private final PointsService pointsService;
+    private final OmsOrderDeliveryMapper deliveryMapper;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     private static final DateTimeFormatter SN_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
 
     public OrderService(OmsOrderMapper orderMapper, OmsOrderItemMapper orderItemMapper,
                         UmsUserAddressMapper addressMapper, SmsCouponMapper couponMapper,
-                        SmsUserCouponMapper userCouponMapper, SmsPointsRuleMapper pointsRuleMapper,
+                        SmsUserCouponMapper userCouponMapper,
                         PmsProductMapper productMapper, UmsUserMapper userMapper,
-                        CartService cartService, CouponService couponService, PointsService pointsService) {
+                        CartService cartService, CouponService couponService, PointsService pointsService,
+                        OmsOrderDeliveryMapper deliveryMapper) {
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
         this.addressMapper = addressMapper;
         this.couponMapper = couponMapper;
         this.userCouponMapper = userCouponMapper;
-        this.pointsRuleMapper = pointsRuleMapper;
         this.productMapper = productMapper;
         this.userMapper = userMapper;
         this.cartService = cartService;
         this.couponService = couponService;
         this.pointsService = pointsService;
+        this.deliveryMapper = deliveryMapper;
     }
 
     @Transactional
@@ -109,19 +115,9 @@ public class OrderService {
             UmsUser user = userMapper.selectById(userId);
             if (user != null && user.getPoints() > 0) {
                 Set<Long> pids = cartItems.stream().map(UmsUserCart::getProductId).collect(Collectors.toSet());
-                List<SmsPointsRule> allRules = pointsRuleMapper.selectList(
-                        new LambdaQueryWrapper<SmsPointsRule>().eq(SmsPointsRule::getStatus, 1));
-                SmsPointsRule rule = null;
-                for (SmsPointsRule r : allRules) {
-                    List<SmsPointsProduct> links = pointsProductMapper.selectList(
-                            new LambdaQueryWrapper<SmsPointsProduct>().eq(SmsPointsProduct::getRuleId, r.getId()));
-                    if (links.isEmpty()) { rule = r; break; }
-                    for (SmsPointsProduct lp : links) {
-                        if (lp.getProductId() != null && pids.contains(lp.getProductId())) { rule = r; break; }
-                    }
-                    if (rule != null) break;
-                }
-                if (rule != null) {
+                List<com.jiayi.dto.PointsRuleVO> rules = pointsService.getRulesForProducts(new ArrayList<>(pids));
+                if (!rules.isEmpty()) {
+                    com.jiayi.dto.PointsRuleVO rule = rules.get(0);
                     BigDecimal orderAfterCoupon = totalAmount.subtract(couponAmount);
                     if (Integer.valueOf(1).equals(rule.getType())) {
                         int maxPoints = user.getPoints() - (user.getPoints() % rule.getPoints());
@@ -159,11 +155,22 @@ public class OrderService {
         order.setFreightAmount(BigDecimal.ZERO);
         order.setPaymentMethod(0);
         order.setStatus(0);
+        String snapshotJson;
         try {
-            order.setAddressSnapshot(objectMapper.writeValueAsString(addr));
+            Map<String, Object> addrMap = new LinkedHashMap<>();
+            addrMap.put("name", addr.getName());
+            addrMap.put("phone", addr.getPhone());
+            addrMap.put("province", addr.getProvince());
+            addrMap.put("city", addr.getCity());
+            addrMap.put("district", addr.getDistrict());
+            addrMap.put("detail", addr.getDetail());
+            snapshotJson = objectMapper.writeValueAsString(addrMap);
         } catch (Exception e) {
-            order.setAddressSnapshot("");
+            log.warn("地址序列化失败, addr={}, err={}", addr, e.getMessage());
+            snapshotJson = "{}";
         }
+        log.info("address_snapshot: {}", snapshotJson);
+        order.setAddressSnapshot(snapshotJson);
         order.setNote(dto.getNote() != null ? dto.getNote() : "");
         order.setCouponId(dto.getCouponId());
         orderMapper.insert(order);
@@ -219,7 +226,7 @@ public class OrderService {
         orderMapper.updateById(order);
     }
 
-    public Page<OmsOrder> adminPage(int page, int size, Long userId, Integer status, String userName) {
+    public Page<AdminOrderVO> adminPage(int page, int size, Long userId, Integer status, String userName) {
         LambdaQueryWrapper<OmsOrder> q = new LambdaQueryWrapper<OmsOrder>().orderByDesc(OmsOrder::getCreateTime);
         if (userId != null) q.eq(OmsOrder::getUserId, userId);
         if (status != null) q.eq(OmsOrder::getStatus, status);
@@ -229,13 +236,71 @@ public class OrderService {
                     .or().like(UmsUser::getPhone, userName))
                     .stream().map(UmsUser::getId).collect(Collectors.toList());
             if (ids.isEmpty()) {
-                Page<OmsOrder> empty = new Page<>(page, size, 0);
+                Page<AdminOrderVO> empty = new Page<>(page, size, 0);
                 empty.setRecords(List.of());
                 return empty;
             }
             q.in(OmsOrder::getUserId, ids);
         }
-        return orderMapper.selectPage(new Page<>(page, size), q);
+        Page<OmsOrder> p = orderMapper.selectPage(new Page<>(page, size), q);
+        Page<AdminOrderVO> result = new Page<>(p.getCurrent(), p.getSize(), p.getTotal());
+        Set<Long> uids = p.getRecords().stream().map(OmsOrder::getUserId).collect(Collectors.toSet());
+        Map<Long, String> nameMap = userMapper.selectBatchIds(uids).stream()
+                .collect(Collectors.toMap(UmsUser::getId, UmsUser::getNickname));
+        Set<Long> orderIds = p.getRecords().stream().map(OmsOrder::getId).collect(Collectors.toSet());
+        Map<Long, List<OmsOrderItem>> itemMap = orderItemMapper.selectList(
+                new LambdaQueryWrapper<OmsOrderItem>().in(OmsOrderItem::getOrderId, orderIds))
+                .stream().collect(Collectors.groupingBy(OmsOrderItem::getOrderId));
+        Map<Long, OmsOrderDelivery> deliveryMap = deliveryMapper.selectList(
+                new LambdaQueryWrapper<OmsOrderDelivery>().in(OmsOrderDelivery::getOrderId, orderIds))
+                .stream().collect(Collectors.toMap(OmsOrderDelivery::getOrderId, d -> d, (a, b) -> a));
+        result.setRecords(p.getRecords().stream().map(o -> {
+            AdminOrderVO vo = new AdminOrderVO();
+            vo.setId(o.getId());
+            vo.setOrderSn(o.getOrderSn());
+            vo.setUserId(o.getUserId());
+            vo.setUserName(nameMap.getOrDefault(o.getUserId(), ""));
+            vo.setTotalAmount(o.getTotalAmount());
+            vo.setPayAmount(o.getPayAmount());
+            vo.setCouponAmount(o.getCouponAmount());
+            vo.setPointsAmount(o.getPointsAmount());
+            vo.setPointsDeduct(o.getPointsDeduct());
+            vo.setFreightAmount(o.getFreightAmount());
+            vo.setPaymentMethod(o.getPaymentMethod());
+            vo.setStatus(o.getStatus());
+            vo.setAddressSnapshot(o.getAddressSnapshot());
+            vo.setNote(o.getNote());
+            vo.setPaidAt(o.getPaidAt());
+            vo.setCouponId(o.getCouponId());
+            vo.setCreateTime(o.getCreateTime());
+            List<OmsOrderItem> orderItems = itemMap.getOrDefault(o.getId(), List.of());
+            vo.setItems(orderItems.stream().map(i -> {
+                OrderItemVO iov = new OrderItemVO();
+                iov.setId(i.getId());
+                iov.setProductId(i.getProductId());
+                iov.setProductName(i.getProductName());
+                iov.setProductSpecs(i.getProductSpecs());
+                iov.setProductImage(i.getProductImage());
+                iov.setPrice(i.getPrice());
+                iov.setQuantity(i.getQuantity());
+                iov.setSubtotal(i.getSubtotal());
+                return iov;
+            }).collect(Collectors.toList()));
+            OmsOrderDelivery delivery = deliveryMap.get(o.getId());
+            if (delivery != null) {
+                vo.setTrackingNo(delivery.getTrackingNo());
+                vo.setExpressCompany(delivery.getExpressCompany());
+            }
+            return vo;
+        }).collect(Collectors.toList()));
+        return result;
+    }
+
+    public long countUnpaid(Long userId) {
+        return orderMapper.selectCount(
+                new LambdaQueryWrapper<OmsOrder>()
+                        .eq(OmsOrder::getUserId, userId)
+                        .eq(OmsOrder::getStatus, 0));
     }
 
     private OrderVO toOrderVO(OmsOrder order) {
@@ -253,6 +318,7 @@ public class OrderService {
         vo.setNote(order.getNote());
         vo.setPaidAt(order.getPaidAt());
         vo.setCreateTime(order.getCreateTime());
+        vo.setMockPay(true);
         List<OmsOrderItem> items = orderItemMapper.selectList(
                 new LambdaQueryWrapper<OmsOrderItem>().eq(OmsOrderItem::getOrderId, order.getId()));
         vo.setItems(items.stream().map(i -> {

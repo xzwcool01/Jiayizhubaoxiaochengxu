@@ -13,6 +13,13 @@ spring:
     username: root
     password: 011108
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      connection-timeout: 30000
+      max-lifetime: 600000
+      leak-detection-threshold: 60000
 
 mybatis-plus:
   configuration:
@@ -37,6 +44,17 @@ springdoc:
 weixin:
   appid: wxff03445f8c883241
   secret: bcbad8153f9631f3eb3a075371487d5d
+
+sf:
+  client-code: YAL1P7QG
+  check-word: meL76NralTCmb6z1MhKhBCkc2iMrcOB7
+  sandbox: true
+  sender-name: 嘉怡珠宝
+  sender-phone: 13800138000
+  sender-province: 广东省
+  sender-city: 深圳市
+  sender-district: 南山区
+  sender-address: 科技园南区嘉怡珠宝大厦
 
 logging:
   level:

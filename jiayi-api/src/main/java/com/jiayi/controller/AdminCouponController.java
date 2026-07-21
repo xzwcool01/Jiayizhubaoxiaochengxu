@@ -45,18 +45,23 @@ public class AdminCouponController {
     }
 
     @PostMapping("/issue")
-    public R<Void> issue(@RequestBody Map<String, Object> body) {
+    public R<Map<String, Object>> issue(@RequestBody Map<String, Object> body) {
         Long couponId = Long.valueOf(body.get("couponId").toString());
         boolean all = Boolean.TRUE.equals(body.get("all"));
+        int count;
         if (all) {
-            couponService.issueToAllUsers(couponId);
+            count = couponService.issueToAllUsers(couponId);
         } else {
-            @SuppressWarnings("unchecked")
-            List<String> userIds = (List<String>) body.get("userIds");
-            List<Long> ids = userIds.stream().map(Long::valueOf).collect(java.util.stream.Collectors.toList());
-            couponService.issueToUser(couponId, ids);
+            List<Long> ids = new java.util.ArrayList<>();
+            Object userIdsObj = body.get("userIds");
+            if (userIdsObj instanceof List<?> userIds) {
+                for (Object o : userIds) {
+                    ids.add(Long.valueOf(o.toString()));
+                }
+            }
+            count = couponService.issueToUser(couponId, ids);
         }
-        return R.ok(null);
+        return R.ok(Map.of("issuedCount", count));
     }
 
     @GetMapping("/search-users")

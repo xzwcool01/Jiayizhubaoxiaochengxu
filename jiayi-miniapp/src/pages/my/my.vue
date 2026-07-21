@@ -197,9 +197,21 @@ async function fetchUserInfo() {
   } catch (e) { console.warn('fetch user info fail', e) }
 }
 
+const unpaidCount = ref(0)
+
+async function fetchUnpaidCount() {
+  if (!token.value) return
+  try {
+    const res = await get('/order/unpaid-count', { openid: token.value })
+    if (res?.code === 200 && res?.data) {
+      unpaidCount.value = res.data.count || 0
+    }
+  } catch {}
+}
+
 onShow(() => {
   if (!isLoggedIn.value) showLogin.value = true
-  else { fetchLevels(); checkSigninStatus(); fetchUserInfo() }
+  else { fetchLevels(); checkSigninStatus(); fetchUserInfo(); fetchUnpaidCount() }
 
 })
 
@@ -216,7 +228,7 @@ const recommendations = [
 ]
 
 const menus = [
-  { icon: 'inventory_2', label: '我的订单', color: '#775836' },
+  { icon: 'inventory_2', label: '我的订单', color: '#775836', badgeKey: 'unpaidCount' as const },
   { icon: 'favorite', label: '我的收藏', color: '#CF6679' },
   { icon: 'location_on', label: '收货地址', color: '#A67B52' },
   { icon: 'card_giftcard', label: '优惠券', color: '#C9A52D' },
@@ -326,7 +338,10 @@ const menus = [
           </view>
           <text class="menu-label">{{ m.label }}</text>
         </view>
-        <MsIcon name="chevron_right" size="36rpx" color="#D2C4B8" />
+        <view class="menu-right">
+          <text v-if="m.badgeKey && unpaidCount > 0" class="menu-badge">{{ unpaidCount }}</text>
+          <MsIcon name="chevron_right" size="36rpx" color="#D2C4B8" />
+        </view>
       </view>
     </view>
 
@@ -418,6 +433,8 @@ const menus = [
 .menu-left { display: flex; align-items: center; gap: 24rpx; }
 .menu-icon-wrap { width: 72rpx; height: 72rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .menu-label { font-size: 26rpx; color: #1C1B1B; font-weight: 500; }
+.menu-right { display: flex; align-items: center; gap: 12rpx; }
+.menu-badge { background: #CF6679; color: #fff; font-size: 20rpx; font-weight: bold; min-width: 36rpx; height: 36rpx; line-height: 36rpx; text-align: center; border-radius: 18rpx; padding: 0 8rpx; }
 
 .logout-btn { margin: 0 32rpx 48rpx; padding: 32rpx; text-align: center; font-size: 26rpx; color: #999; border-radius: 24rpx; background: #fff; border: 2rpx solid rgba(210,196,184,0.2); }
 .overlay { position: fixed; z-index: 100; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }

@@ -21,8 +21,7 @@ export function getAddressList() {
 }
 
 export function addAddress(addr: UmsUserAddress) {
-  addr.userId = 0
-  return post<null>('/address/add', addr)
+  return post<null>('/address/add', { ...addr, openid: getOpenid() })
 }
 
 export function updateAddress(addr: UmsUserAddress) {

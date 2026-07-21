@@ -3,6 +3,7 @@ import request from '@/utils/axios'
 export interface AdminAddressVO {
   id: number
   userId: number
+  userName: string
   name: string
   phone: string
   province: string

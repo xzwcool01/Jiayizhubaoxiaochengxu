@@ -68,18 +68,23 @@ function toggleUser(id: number) {
 
 async function handleIssue() {
   if (!selectedUserIds.value.length) { ElMessage.warning('请先搜索并勾选用户，或使用"发放给全部用户"'); return }
-  await issueCoupon({ couponId: issueCouponId.value, userIds: selectedUserIds.value })
-  ElMessage.success('发放成功')
+  const res = await issueCoupon({ couponId: issueCouponId.value, userIds: selectedUserIds.value })
+  ElMessage.success(`发放成功，共发放 ${res.data?.issuedCount || 0} 张`)
   issueVisible.value = false
   fetchData()
 }
 
 async function handleIssueAll() {
   await ElMessageBox.confirm('确定要发放给所有用户？此操作不可撤销', '确认', { confirmButtonText: '确认发放', cancelButtonText: '取消', type: 'warning' })
-  await issueCoupon({ couponId: issueCouponId.value, all: true })
-  ElMessage.success('已发放给全部用户')
+  const res = await issueCoupon({ couponId: issueCouponId.value, all: true })
+  ElMessage.success(`已发放给全部用户，共发放 ${res.data?.issuedCount || 0} 张`)
   issueVisible.value = false
   fetchData()
+}
+
+function getRemain(row: AdminCouponVO) {
+  if (!row.totalCount) return Infinity
+  return row.totalCount - (row.issuedCount || 0)
 }
 
 function formatTime(t?: string) { return t ? t.replace('T', ' ').substring(0, 16) : '-' }
@@ -106,13 +111,21 @@ onMounted(fetchData)
         <el-table-column label="有效期" min-width="220">
           <template #default="{ row }">{{ formatTime(row.startTime) }} ~ {{ formatTime(row.endTime) }}</template>
         </el-table-column>
-        <el-table-column prop="usedCount" label="已用/总量" width="110">
-          <template #default="{ row }">{{ row.usedCount || 0 }} / {{ row.totalCount || '-' }}</template>
+        <el-table-column label="已发放" width="100">
+          <template #default="{ row }">{{ row.issuedCount || 0 }} / {{ row.totalCount || '不限' }}</template>
+        </el-table-column>
+        <el-table-column label="已使用" width="80">
+          <template #default="{ row }">{{ row.usedCount || 0 }}</template>
+        </el-table-column>
+        <el-table-column label="剩余" width="80">
+          <template #default="{ row }">
+            <span :style="{ color: getRemain(row) <= 0 ? '#ba1a1a' : '#67c23a' }">{{ getRemain(row) <= 0 ? '已发完' : getRemain(row) }}</span>
+          </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button size="small" type="primary" link @click="openEdit(row)">编辑</el-button>
-            <el-button size="small" type="success" link @click="openIssue(row)">发券</el-button>
+            <el-button size="small" :type="getRemain(row) <= 0 ? 'info' : 'success'" link :disabled="getRemain(row) <= 0" @click="openIssue(row)">{{ getRemain(row) <= 0 ? '已发完' : '发券' }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -137,7 +150,7 @@ onMounted(fetchData)
     </el-dialog>
 
     <el-dialog v-model="issueVisible" title="发放优惠券" width="500px">
-      <p style="color:#999;margin-bottom:12px">优惠券 ID: {{ issueCouponId }}</p>
+      <p style="color:#999;margin-bottom:12px">优惠券ID: {{ issueCouponId }} | 可发放: {{ list.find(r => r.id === issueCouponId) ? getRemain(list.find(r => r.id === issueCouponId)!) : '-' }} 张</p>
       <el-form :inline="true" @submit.prevent="searchUser">
         <el-form-item><el-input v-model="searchKeyword" placeholder="搜索用户昵称/手机号" clearable style="width:240px" /></el-form-item>
         <el-form-item><el-button type="primary" @click="searchUser">搜索</el-button></el-form-item>

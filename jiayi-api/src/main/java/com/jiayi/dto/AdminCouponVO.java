@@ -18,6 +18,7 @@ public class AdminCouponVO {
     private Integer totalCount;
     private Integer perUserLimit;
     private Integer usedCount;
+    private Integer issuedCount;
     private Integer status;
     private List<Long> productIds;
     private List<String> productNames;

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import com.jiayi.dto.AdminAddressVO;
 
 @Service
 public class AddressService {
@@ -76,7 +77,7 @@ public class AddressService {
         return addressMapper.selectById(id);
     }
 
-    public Page<UmsUserAddress> pageWithUser(int page, int size, String userName) {
+    public Page<AdminAddressVO> pageWithUser(int page, int size, String userName) {
         LambdaQueryWrapper<UmsUserAddress> q = new LambdaQueryWrapper<UmsUserAddress>().orderByDesc(UmsUserAddress::getCreateTime);
         if (userName != null && !userName.isBlank()) {
             List<Long> userIds = userMapper.selectList(new LambdaQueryWrapper<UmsUser>()
@@ -84,12 +85,32 @@ public class AddressService {
                     .or().like(UmsUser::getPhone, userName))
                     .stream().map(UmsUser::getId).collect(Collectors.toList());
             if (userIds.isEmpty()) {
-                Page<UmsUserAddress> empty = new Page<>(page, size, 0);
+                Page<AdminAddressVO> empty = new Page<>(page, size, 0);
                 empty.setRecords(List.of());
                 return empty;
             }
             q.in(UmsUserAddress::getUserId, userIds);
         }
-        return addressMapper.selectPage(new Page<>(page, size), q);
+        Page<UmsUserAddress> p = addressMapper.selectPage(new Page<>(page, size), q);
+        Page<AdminAddressVO> result = new Page<>(p.getCurrent(), p.getSize(), p.getTotal());
+        Set<Long> uids = p.getRecords().stream().map(UmsUserAddress::getUserId).collect(Collectors.toSet());
+        Map<Long, String> nameMap = userMapper.selectBatchIds(uids).stream()
+                .collect(Collectors.toMap(UmsUser::getId, UmsUser::getNickname));
+        result.setRecords(p.getRecords().stream().map(a -> {
+            AdminAddressVO vo = new AdminAddressVO();
+            vo.setId(a.getId());
+            vo.setUserId(a.getUserId());
+            vo.setUserName(nameMap.getOrDefault(a.getUserId(), ""));
+            vo.setName(a.getName());
+            vo.setPhone(a.getPhone());
+            vo.setProvince(a.getProvince());
+            vo.setCity(a.getCity());
+            vo.setDistrict(a.getDistrict());
+            vo.setDetail(a.getDetail());
+            vo.setIsDefault(a.getIsDefault());
+            vo.setCreateTime(a.getCreateTime());
+            return vo;
+        }).collect(Collectors.toList()));
+        return result;
     }
 }

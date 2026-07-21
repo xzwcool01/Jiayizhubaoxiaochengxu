@@ -59,10 +59,13 @@ public class OrderController {
     }
 
     @PostMapping("/pay")
-    public R<Void> pay(@RequestBody Map<String, Object> body) {
+    public R<OrderVO> pay(@RequestBody Map<String, Object> body) {
         Long orderId = Long.valueOf(body.get("id").toString());
+        String openid = (String) body.get("openid");
         orderService.payOrder(orderId);
-        return R.ok(null);
+        UmsUser user = getUserOrThrow(openid);
+        OrderVO vo = orderService.getOrderDetail(orderId, user.getId());
+        return R.ok(vo);
     }
 
     @PostMapping("/cancel")
@@ -73,5 +76,13 @@ public class OrderController {
         if (user == null) return R.error("用户未找到");
         orderService.cancelOrder(orderId, user.getId());
         return R.ok(null);
+    }
+
+    @GetMapping("/unpaid-count")
+    public R<Map<String, Long>> unpaidCount(@RequestParam String openid) {
+        UmsUser user = getUserOrThrow(openid);
+        if (user == null) return R.ok(Map.of("count", 0L));
+        long count = orderService.countUnpaid(user.getId());
+        return R.ok(Map.of("count", count));
     }
 }

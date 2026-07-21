@@ -159,6 +159,7 @@ CREATE TABLE IF NOT EXISTS sms_coupon (
     total_count INT DEFAULT 0 COMMENT '发行总量',
     per_user_limit INT DEFAULT 1 COMMENT '每用户限领',
     used_count INT DEFAULT 0 COMMENT '已使用',
+    issued_count INT DEFAULT 0 COMMENT '已发放数量',
     status TINYINT DEFAULT 1 COMMENT '0-下架 1-上架',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

@@ -5,6 +5,7 @@ import MsIcon from '@/components/MsIcon.vue'
 import { getCartList, type CartItemVO } from '@/api/cart'
 import { getMyCoupons, type UserCouponVO } from '@/api/coupon'
 import { getPointsInfo } from '@/api/points'
+import { getAddressList } from '@/api/address'
 import { createOrder } from '@/api/order'
 
 const items = ref<CartItemVO[]>([])
@@ -66,6 +67,14 @@ async function loadData() {
       addressText.value = `${addr.name} ${addr.phone} ${addr.province}${addr.city}${addr.district}${addr.detail}`
       addressId.value = addr.id
     } catch {}
+  } else {
+    const addrRes = await getAddressList()
+    if (addrRes.code === 200 && addrRes.data?.length) {
+      const def = addrRes.data.find((a: any) => a.isDefault) || addrRes.data[0]
+      addressText.value = `${def.name} ${def.phone} ${def.province}${def.city}${def.district}${def.detail}`
+      addressId.value = def.id
+      uni.setStorageSync('selectedAddress', JSON.stringify(def))
+    }
   }
 
   const [couponRes, pointsRes] = await Promise.all([
@@ -85,8 +94,37 @@ function selectCoupon(c: UserCouponVO | null) {
   showCouponPicker.value = false
 }
 
+async function checkUnpaidBeforeSubmit(): Promise<boolean> {
+  try {
+    const openid = uni.getStorageSync('token')
+    if (!openid) return true
+    const res = await uni.request({
+      url: `http://localhost:8080/api/order/unpaid-count?openid=${openid}`,
+      method: 'GET'
+    })
+    const data = res.data as any
+    if (data?.code === 200 && data.data?.count > 0) {
+      return new Promise((resolve) => {
+        uni.showModal({
+          title: '未支付订单',
+          content: `您有 ${data.data.count} 笔订单未支付，是否先去支付？`,
+          confirmText: '去支付',
+          cancelText: '继续下单',
+          success: (r) => resolve(!r.confirm)
+        })
+      })
+    }
+  } catch {}
+  return true
+}
+
 async function submitOrder() {
   if (!addressId.value) { uni.showToast({ title: '请选择收货地址', icon: 'none' }); return }
+  const ok = await checkUnpaidBeforeSubmit()
+  if (!ok) {
+    uni.navigateTo({ url: '/pages/order/list' })
+    return
+  }
   submitting.value = true
   try {
     const res = await createOrder({
@@ -98,7 +136,11 @@ async function submitOrder() {
     })
     if (res.code === 200 && res.data) {
       uni.removeStorageSync('selectedAddress')
-      uni.redirectTo({ url: '/pages/order/success?id=' + res.data.id })
+      if (res.data.mockPay) {
+        uni.redirectTo({ url: '/pages/order/pay?id=' + res.data.id })
+      } else {
+        uni.redirectTo({ url: '/pages/order/success?id=' + res.data.id })
+      }
     } else {
       uni.showToast({ title: res.message || '提交失败', icon: 'none' })
     }
@@ -127,6 +169,9 @@ onShow(loadData)
   <view class="page">
     <!-- Top Header -->
     <view class="top-header">
+      <view class="back-btn" @tap="uni.navigateBack()">
+        <MsIcon name="arrow_back" size="40rpx" color="#775836" />
+      </view>
       <text class="top-title">确认订单</text>
     </view>
 
@@ -252,14 +297,15 @@ onShow(loadData)
 .page { background-color: #FAFAF8; min-height: 100vh; display: flex; flex-direction: column; }
 
 /* Top Header */
-.top-header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: rgba(252,249,248,0.8); backdrop-filter: blur(20px); height: 112rpx; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 16rpx; }
+.top-header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: rgba(252,249,248,0.8); backdrop-filter: blur(20px); height: 180rpx; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 20rpx; }
 .top-title { font-size: 44rpx; font-weight: 600; color: #775836; font-family: 'Noto Serif SC', serif; }
+.back-btn { position: absolute; left: 24rpx; bottom: 16rpx; width: 60rpx; height: 60rpx; display: flex; align-items: center; justify-content: center; z-index: 1; }
 
 /* Content */
-.content { flex: 1; padding: 128rpx 32rpx 200rpx; }
+.content { flex: 1; padding: 200rpx 0 200rpx; }
 
 /* Card base */
-.card { background: #ffffff; border-radius: 24rpx; padding: 32rpx; margin-bottom: 24rpx; box-shadow: 0 2rpx 16rpx rgba(0,0,0,0.06); }
+.card { background: #ffffff; border-radius: 24rpx; padding: 32rpx; margin: 0 32rpx 24rpx; box-shadow: 0 2rpx 16rpx rgba(0,0,0,0.06); }
 
 /* Address Card */
 .address-card { display: flex; align-items: flex-start; gap: 24rpx; }
@@ -324,7 +370,7 @@ onShow(loadData)
 
 /* Overlay */
 .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 100; display: flex; align-items: flex-end; justify-content: center; }
-.picker-card { background: #fff; border-radius: 32rpx 32rpx 0 0; padding: 40rpx; width: 100%; max-height: 60vh; overflow-y: auto; }
+.picker-card { background: #fff; border-radius: 32rpx 32rpx 0 0; padding: 40rpx; width: 100%; max-height: 60vh; overflow-y: auto; box-sizing: border-box; }
 .picker-title { font-size: 34rpx; font-weight: 600; color: #1c1b1b; margin-bottom: 24rpx; display: block; }
 .coupon-option { display: flex; justify-content: space-between; align-items: center; padding: 24rpx 0; border-bottom: 2rpx solid #f6f3f2; }
 .coupon-info { display: flex; align-items: center; gap: 12rpx; }

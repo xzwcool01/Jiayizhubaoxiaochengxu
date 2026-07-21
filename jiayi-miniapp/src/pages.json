@@ -18,7 +18,9 @@
     {"path": "pages/order/confirm", "style": {"navigationStyle": "custom"}},
     {"path": "pages/order/list", "style": {"navigationStyle": "custom"}},
     {"path": "pages/order/detail", "style": {"navigationStyle": "custom"}},
-    {"path": "pages/order/success", "style": {"navigationStyle": "custom"}}
+    {"path": "pages/order/success", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/order/pay", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/order/delivery", "style": {"navigationStyle": "custom"}}
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",

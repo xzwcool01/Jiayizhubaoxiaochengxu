@@ -45,6 +45,7 @@ onMounted(fetchData)
     <el-card shadow="never">
       <el-table :data="list" v-loading="loading" stripe style="width:100%">
         <el-table-column prop="id" label="编号" width="60" />
+        <el-table-column prop="userName" label="用户昵称" min-width="120" />
         <el-table-column prop="userId" label="用户ID" width="70" />
         <el-table-column prop="name" label="收件人" width="100" />
         <el-table-column prop="phone" label="联系电话" width="130" />

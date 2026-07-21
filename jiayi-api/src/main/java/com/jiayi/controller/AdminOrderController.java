@@ -2,7 +2,7 @@ package com.jiayi.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jiayi.common.R;
-import com.jiayi.entity.OmsOrder;
+import com.jiayi.dto.AdminOrderVO;
 import com.jiayi.service.OrderService;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +17,7 @@ public class AdminOrderController {
     }
 
     @GetMapping("/list")
-    public R<Page<OmsOrder>> list(
+    public R<Page<AdminOrderVO>> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long userId,

@@ -20,6 +20,7 @@ public class SmsCoupon {
     private Integer totalCount;
     private Integer perUserLimit;
     private Integer usedCount;
+    private Integer issuedCount;
     private Integer status;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;

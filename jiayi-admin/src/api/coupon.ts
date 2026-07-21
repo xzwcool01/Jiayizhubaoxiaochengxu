@@ -12,6 +12,7 @@ export interface AdminCouponVO {
   totalCount?: number
   perUserLimit?: number
   usedCount?: number
+  issuedCount?: number
   status?: number
   productIds?: number[]
   productNames?: string[]
@@ -40,7 +41,7 @@ export function updateCoupon(id: number, data: AdminCouponVO) {
 }
 
 export function issueCoupon(params: { couponId: number; userIds?: number[]; all?: boolean }) {
-  return request.post<any, { code: number }>('/admin/coupon/issue', params)
+  return request.post<any, { code: number; data: { issuedCount: number } }>('/admin/coupon/issue', params)
 }
 
 export function searchUsers(keyword: string) {

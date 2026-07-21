@@ -36,7 +36,20 @@ public class AddressController {
     }
 
     @PostMapping("/add")
-    public R<Void> add(@RequestBody UmsUserAddress addr) {
+    public R<Void> add(@RequestBody Map<String, Object> body) {
+        String openid = (String) body.get("openid");
+        UmsUser user = getUserOrThrow(openid);
+        if (user == null) return R.error("用户未登录");
+        UmsUserAddress addr = new UmsUserAddress();
+        addr.setUserId(user.getId());
+        addr.setName((String) body.get("name"));
+        addr.setPhone((String) body.get("phone"));
+        addr.setProvince((String) body.getOrDefault("province", ""));
+        addr.setCity((String) body.getOrDefault("city", ""));
+        addr.setDistrict((String) body.getOrDefault("district", ""));
+        addr.setDetail((String) body.get("detail"));
+        Object isDef = body.get("isDefault");
+        addr.setIsDefault(isDef instanceof Boolean ? (Boolean) isDef : false);
         addressService.add(addr);
         return R.ok(null);
     }
