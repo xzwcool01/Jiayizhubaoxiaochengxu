@@ -23,6 +23,7 @@ public class AdminOrderVO {
     private String note;
     private LocalDateTime paidAt;
     private Long couponId;
+    private Integer reviewed;
     private LocalDateTime createTime;
     private List<OrderItemVO> items;
     private String trackingNo;

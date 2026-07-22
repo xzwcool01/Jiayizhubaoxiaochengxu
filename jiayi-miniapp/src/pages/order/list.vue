@@ -7,12 +7,13 @@ const orders = ref<OrderVO[]>([])
 const currentTab = ref(0)
 const statusBarHeight = ref(0)
 
-const tabs = ['全部', '待付款', '待发货', '待收货', '已完成']
+const tabs = ['全部', '待付款', '待发货', '待收货', '已完成', '已评价']
 const tabStatus = [undefined, 0, 1, 2, 3]
+const tabReviewed = [undefined, undefined, undefined, undefined, undefined, 1]
 
 async function fetchData() {
   if (!uni.getStorageSync('token')) { uni.switchTab({ url: '/pages/my/my' }); return }
-  const res = await getOrderList(tabStatus[currentTab.value])
+  const res = await getOrderList(tabStatus[currentTab.value], tabReviewed[currentTab.value])
   if (res.code === 200) orders.value = res.data || []
 }
 
@@ -40,6 +41,11 @@ function goPay(id: number) {
 
 function goDelivery(id: number) {
   uni.navigateTo({ url: '/pages/order/delivery?orderId=' + id })
+}
+
+function goReview(o: OrderVO) {
+  if (!o.items?.length) return
+  uni.navigateTo({ url: '/pages/order/review?orderId=' + o.id + '&productId=' + o.items[0].productId })
 }
 
 async function handleReceive(id: number) {
@@ -73,11 +79,14 @@ onShow(() => {
       <text class="page-title">我的订单</text>
     </view>
 
-    <scroll-view class="tabs" scroll-x show-scrollbar="false">
-      <view v-for="(t, i) in tabs" :key="i" :class="['tab', currentTab === i ? 'active' : '']" @tap="switchTab(i)">
-        <text>{{ t }}</text>
-      </view>
-    </scroll-view>
+    <view class="tabs-wrap">
+      <scroll-view class="tabs" scroll-x show-scrollbar="false">
+        <view v-for="(t, i) in tabs" :key="i" :class="['tab', currentTab === i ? 'active' : '']" @tap="switchTab(i)">
+          <text>{{ t }}</text>
+        </view>
+        <view style="width:32rpx;flex-shrink:0"></view>
+      </scroll-view>
+    </view>
 
     <scroll-view class="list" scroll-y>
       <view class="list-inner">
@@ -85,7 +94,7 @@ onShow(() => {
         <view v-for="o in orders" :key="o.id" class="order-card" @tap="goDetail(o.id)">
           <view class="order-header">
             <text class="order-sn">订单号: {{ o.orderSn }}</text>
-            <text :class="['status', o.status === 0 ? 'pay' : '']">{{ ['待付款','待发货','待收货','已完成','已关闭'][o.status] || '未知' }}</text>
+            <text :class="['status', o.status === 0 ? 'pay' : '', o.status === 3 && o.reviewed === 1 ? 'reviewed' : '']">{{ o.status === 3 && o.reviewed === 1 ? '已评价' : (['待付款','待发货','待收货','已完成','已关闭'][o.status] || '未知') }}</text>
           </view>
           <view v-for="item in o.items" :key="item.id" class="order-item">
             <image class="item-img" :src="item.productImage || ''" mode="aspectFill" />
@@ -110,6 +119,9 @@ onShow(() => {
             <view class="action-btn cancel" @tap.stop="goDelivery(o.id)">查看物流</view>
             <view class="action-btn pay" @tap.stop="handleReceive(o.id)">确认收货</view>
           </view>
+          <view class="order-actions" v-else-if="o.status === 3 && o.reviewed === 0">
+            <view class="action-btn pay" @tap.stop="goReview(o)">去评价</view>
+          </view>
         </view>
       </view>
     </scroll-view>
@@ -122,8 +134,9 @@ onShow(() => {
 .back-btn { width: 60rpx; }
 .back-btn text { font-size: 36rpx; color: #775836; }
 .page-title { font-size: 36rpx; font-weight: 600; color: #1C1B1B; margin-left: 16rpx; }
-.tabs { display: flex; white-space: nowrap; padding: 8rpx 32rpx 20rpx; }
-.tab { display: inline-block; padding: 12rpx 28rpx; font-size: 26rpx; color: #605E5A; margin-right: 16rpx; border-radius: 40rpx; background: #fff; }
+.tabs-wrap { padding: 0 32rpx; }
+.tabs { display: flex; white-space: nowrap; padding: 8rpx 0 20rpx; }
+.tab { display: inline-block; padding: 12rpx 28rpx; font-size: 26rpx; color: #605E5A; margin-right: 16rpx; border-radius: 40rpx; background: #fff; flex-shrink: 0; }
 .tab.active { color: #fff; background: #775836; }
 .list { width: 100%; }
 .list-inner { padding: 0 32rpx; }
@@ -133,6 +146,7 @@ onShow(() => {
 .order-sn { font-size: 22rpx; color: #999; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .status { font-size: 24rpx; color: #605E5A; padding: 4rpx 16rpx; border-radius: 8rpx; background: #f0f0f0; flex-shrink: 0; margin-left: 12rpx; }
 .status.pay { color: #775836; background: #f6f4f2; }
+.status.reviewed { color: #5a8a5a; background: #edf5ed; }
 .order-item { display: flex; gap: 16rpx; padding: 12rpx 0; border-top: 2rpx solid #f5f5f5; }
 .order-item:first-of-type { border-top: none; }
 .item-img { width: 110rpx; height: 110rpx; border-radius: 12rpx; flex-shrink: 0; }

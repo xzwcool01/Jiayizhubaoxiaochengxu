@@ -6,6 +6,10 @@ export interface UmsLevel {
   minPoints: number
   maxPoints: number
   levelOrder: number
+  discountRate?: number
+  color?: string
+  perks?: string
+  icon?: string
 }
 
 export function getLevelList() {

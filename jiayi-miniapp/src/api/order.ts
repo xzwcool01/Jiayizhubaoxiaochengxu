@@ -26,6 +26,7 @@ export interface OrderVO {
   paidAt: string
   createTime: string
   mockPay: boolean
+  reviewed: number
   items: OrderItemVO[]
 }
 
@@ -49,9 +50,10 @@ export function getOrderDetail(id: number) {
   return get<OrderVO>('/order/detail', { id, openid: getOpenid() })
 }
 
-export function getOrderList(status?: number) {
+export function getOrderList(status?: number, reviewed?: number) {
   const params: Record<string, any> = { openid: getOpenid() }
   if (status !== undefined) params.status = status
+  if (reviewed !== undefined) params.reviewed = reviewed
   return get<OrderVO[]>('/order/list', params)
 }
 

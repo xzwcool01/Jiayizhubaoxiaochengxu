@@ -36,7 +36,7 @@ const formRef = ref<any>(null)
 const form = reactive<ProductDTO>({
   categoryId: 0, productType: 0, name: '', subtitle: '', images: [],
   description: '', descriptionText: '', specs: '', price: 0, originalPrice: undefined, pointsPrice: 0,
-  stock: 0, flashStock: 0, saleStart: undefined, saleEnd: undefined,
+  stock: 0, sales: 0, flashStock: 0, saleStart: undefined, saleEnd: undefined,
   memberLevel: 0, isNew: 0, isRecommend: 0, sortOrder: 0, weight: 0, status: 1
 })
 const imageUrlList = ref<string[]>([])
@@ -144,7 +144,7 @@ async function openEdit(id: number) {
     description: p.description || '', descriptionText: p.descriptionText || '',
     specs: p.specs || (parsedSpecs.length ? JSON.stringify(parsedSpecs) : ''),
     price: p.price, originalPrice: p.originalPrice || undefined,
-    pointsPrice: p.pointsPrice || 0, stock: p.stock || 0, flashStock: p.flashStock || 0,
+    pointsPrice: p.pointsPrice || 0, stock: p.stock || 0, sales: p.sales || 0, flashStock: p.flashStock || 0,
     saleStart: p.saleStart || undefined, saleEnd: p.saleEnd || undefined,
     memberLevel: p.memberLevel || 0, isNew: p.isNew || 0, isRecommend: p.isRecommend || 0,
     sortOrder: p.sortOrder || 0, weight: p.weight ?? 0, status: p.status ?? 1
@@ -433,6 +433,9 @@ function getMainImageUrl(row: PmsProduct): string {
         <!-- Stock -->
         <el-form-item label="库存">
           <el-input-number v-model="form.stock" :min="0" style="width:200px" />
+        </el-form-item>
+        <el-form-item label="已售">
+          <el-input-number v-model="form.sales" :min="0" style="width:200px" />
         </el-form-item>
         <el-form-item v-if="showFlashStock" label="抢购库存">
           <el-input-number v-model="form.flashStock" :min="0" style="width:200px" />

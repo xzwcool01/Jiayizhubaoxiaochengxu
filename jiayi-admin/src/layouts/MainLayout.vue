@@ -18,6 +18,8 @@ const menuItems = [
   { path: '/cart', icon: 'ShoppingCart', label: '购物车管理' },
   { path: '/coupon', icon: 'Ticket', label: '优惠券管理' },
   { path: '/points', icon: 'Coin', label: '积分规则' },
+  { path: '/action-points', icon: 'Coin', label: '行为积分' },
+  { path: '/review', icon: 'ChatDotSquare', label: '评价管理' },
   { path: '/address', icon: 'Location', label: '地址管理' }
 ]
 

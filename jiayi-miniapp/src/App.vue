@@ -26,8 +26,8 @@ async function checkUnpaid() {
   } catch {}
 }
 
-onLaunch(() => { console.log('App Launch') })
-onShow(() => { checkUnpaid() })
+onLaunch(() => { checkUnpaid() })
+onShow(() => {})
 onHide(() => { console.log('App Hide') })
 </script>
 <style>

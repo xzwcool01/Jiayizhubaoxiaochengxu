@@ -145,6 +145,7 @@ public class DeliveryService {
         delivery.setReceivedAt(LocalDateTime.now());
         deliveryMapper.updateById(delivery);
         order.setStatus(3);
+        order.setReviewed(0);
         orderMapper.updateById(order);
     }
 

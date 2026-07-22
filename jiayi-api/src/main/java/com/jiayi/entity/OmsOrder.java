@@ -24,6 +24,7 @@ public class OmsOrder {
     private String note;
     private LocalDateTime paidAt;
     private Long couponId;
+    private Integer reviewed;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     @TableField(fill = FieldFill.INSERT_UPDATE)

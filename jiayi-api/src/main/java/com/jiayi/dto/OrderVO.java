@@ -21,6 +21,7 @@ public class OrderVO {
     private LocalDateTime paidAt;
     private LocalDateTime createTime;
     private Boolean mockPay;
+    private Integer reviewed;
     private List<OrderItemVO> items;
 }
 

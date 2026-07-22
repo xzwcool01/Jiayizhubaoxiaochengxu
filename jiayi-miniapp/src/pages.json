@@ -21,7 +21,9 @@
     {"path": "pages/order/success", "style": {"navigationStyle": "custom"}},
     {"path": "pages/order/pay", "style": {"navigationStyle": "custom"}},
     {"path": "pages/order/delivery", "style": {"navigationStyle": "custom"}},
-    {"path": "pages/my/coupon", "style": {"navigationStyle": "custom"}}
+    {"path": "pages/my/coupon", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/order/review", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/product/review", "style": {"navigationStyle": "custom"}}
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",

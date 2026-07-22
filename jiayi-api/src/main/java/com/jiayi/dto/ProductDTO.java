@@ -20,6 +20,7 @@ public class ProductDTO {
     private BigDecimal originalPrice;
     private Integer pointsPrice;
     private Integer stock;
+    private Integer sales;
     private Integer flashStock;
     private LocalDateTime saleStart;
     private LocalDateTime saleEnd;

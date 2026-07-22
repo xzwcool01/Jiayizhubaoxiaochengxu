@@ -2,21 +2,22 @@ package com.jiayi.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("ums_member_level")
-public class UmsMemberLevel {
+@TableName("oms_order_review")
+public class OmsOrderReview {
     @TableId(type = IdType.AUTO)
     private Long id;
-    private String name;
-    private Integer minPoints;
-    private Integer maxPoints;
-    private BigDecimal discountRate;
-    private String icon;
-    @TableLogic
-    private Integer deleted;
+    private Long orderId;
+    private Long productId;
+    private Long userId;
+    private Integer rating;
+    private String content;
+    private String images;
+    private Integer isAnonymous;
+    private Integer isTop;
+    private Integer status;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     @TableField(fill = FieldFill.INSERT_UPDATE)

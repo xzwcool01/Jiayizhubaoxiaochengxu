@@ -1,8 +1,6 @@
 package com.jiayi.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.jiayi.common.R;
-import com.jiayi.dto.LevelUpdateDTO;
 import com.jiayi.entity.UmsLevel;
 import com.jiayi.service.UmsLevelService;
 import org.springframework.web.bind.annotation.*;
@@ -35,26 +33,21 @@ public class LevelController {
     }
 
     @PostMapping
-    public R<UmsLevel> create(@RequestBody UmsLevel level) {
+    public R<Void> create(@RequestBody UmsLevel level) {
         levelService.save(level);
-        return R.ok(level);
+        return R.ok(null);
     }
 
     @PutMapping("/{id}")
-    public R<UmsLevel> update(@PathVariable Integer id, @RequestBody LevelUpdateDTO dto) {
-        UmsLevel level = levelService.getById(id);
-        if (level == null) return R.error("等级不存在");
-        if (dto.getName() != null) level.setName(dto.getName());
-        if (dto.getMinPoints() != null) level.setMinPoints(dto.getMinPoints());
-        if (dto.getMaxPoints() != null) level.setMaxPoints(dto.getMaxPoints());
-        if (dto.getLevelOrder() != null) level.setLevelOrder(dto.getLevelOrder());
+    public R<Void> update(@PathVariable Integer id, @RequestBody UmsLevel level) {
+        level.setId(id);
         levelService.updateById(level);
-        return R.ok(level);
+        return R.ok(null);
     }
 
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Integer id) {
-        if (!levelService.removeById(id)) return R.error("删除失败");
+        levelService.removeById(id);
         return R.ok(null);
     }
 }

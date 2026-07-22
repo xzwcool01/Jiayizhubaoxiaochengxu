@@ -205,6 +205,7 @@ public class ProductController {
         p.setOriginalPrice(dto.getOriginalPrice());
         p.setPointsPrice(dto.getPointsPrice());
         p.setStock(dto.getStock());
+        p.setSales(dto.getSales());
         p.setFlashStock(dto.getFlashStock());
         p.setSaleStart(dto.getSaleStart());
         p.setSaleEnd(dto.getSaleEnd());

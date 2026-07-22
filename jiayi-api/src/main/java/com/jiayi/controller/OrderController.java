@@ -52,10 +52,11 @@ public class OrderController {
     }
 
     @GetMapping("/list")
-    public R<List<OrderVO>> list(@RequestParam String openid, @RequestParam(required = false) Integer status) {
+    public R<List<OrderVO>> list(@RequestParam String openid, @RequestParam(required = false) Integer status,
+                                  @RequestParam(required = false) Integer reviewed) {
         UmsUser user = getUserOrThrow(openid);
         if (user == null) return R.ok(List.of());
-        return R.ok(orderService.listByUser(user.getId(), status));
+        return R.ok(orderService.listByUser(user.getId(), status, reviewed));
     }
 
     @PostMapping("/pay")

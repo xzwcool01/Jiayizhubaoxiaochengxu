@@ -30,6 +30,9 @@ public class CartService {
     }
 
     public void add(Long userId, Long productId, int quantity) {
+        PmsProduct product = productMapper.selectById(productId);
+        if (product == null) throw new RuntimeException("商品不存在");
+        if (product.getStock() != null && product.getStock() <= 0) throw new RuntimeException("商品已售罄");
         UmsUserCart existing = cartMapper.selectOne(new LambdaQueryWrapper<UmsUserCart>()
                 .eq(UmsUserCart::getUserId, userId)
                 .eq(UmsUserCart::getProductId, productId));

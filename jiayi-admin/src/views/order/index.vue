@@ -30,6 +30,7 @@ function getRoutes() {
 
 const statusMap: Record<number, string> = { 0: '待付款', 1: '待发货', 2: '待收货', 3: '已完成', 4: '已关闭' }
 const statusColors: Record<number, string> = { 0: '#e6a23c', 1: '#409eff', 2: '#67c23a', 3: '#909399', 4: '#c0c4cc' }
+const reviewedColor = '#5a8a5a'
 const statusOptions = [
   { value: undefined, label: '全部状态' },
   { value: 0, label: '待付款' },
@@ -261,7 +262,8 @@ onMounted(fetchData)
         </el-table-column>
         <el-table-column label="订单状态" width="90">
           <template #default="{ row }">
-            <el-tag :color="statusColors[row.status]" style="color:#fff;border:none;font-size:12px">{{ statusMap[row.status] || '未知' }}</el-tag>
+            <el-tag v-if="row.status === 3 && row.reviewed === 1" :color="reviewedColor" style="color:#fff;border:none;font-size:12px">已评价</el-tag>
+            <el-tag v-else :color="statusColors[row.status]" style="color:#fff;border:none;font-size:12px">{{ statusMap[row.status] || '未知' }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="快递单号" min-width="160" show-overflow-tooltip>

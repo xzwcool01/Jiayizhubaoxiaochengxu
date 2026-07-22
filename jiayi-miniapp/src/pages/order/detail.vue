@@ -2,9 +2,11 @@
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { getOrderDetail, cancelOrder, payOrder, type OrderVO } from '@/api/order'
+import { getReviewByOrder, type ReviewVO } from '@/api/review'
 
 const order = ref<OrderVO | null>(null)
 const orderId = ref(0)
+const review = ref<ReviewVO | null>(null)
 
 onLoad(async (opt) => {
   orderId.value = Number(opt?.id || 0)
@@ -13,7 +15,13 @@ onLoad(async (opt) => {
 
 async function loadData() {
   const res = await getOrderDetail(orderId.value)
-  if (res.code === 200) order.value = res.data
+  if (res.code === 200) {
+    order.value = res.data
+    if (res.data.reviewed === 1) {
+      const rr = await getReviewByOrder(orderId.value)
+      if (rr.code === 200) review.value = rr.data
+    }
+  }
 }
 
 async function handleCancel() {
@@ -25,6 +33,11 @@ async function handleCancel() {
 async function handlePay() {
   await payOrder(orderId.value)
   uni.redirectTo({ url: '/pages/order/success?id=' + orderId.value })
+}
+
+function goReview() {
+  if (!order.value?.items?.length) return
+  uni.navigateTo({ url: '/pages/order/review?orderId=' + orderId.value + '&productId=' + order.value.items[0].productId })
 }
 
 function getStatusText(s: number) {
@@ -103,18 +116,32 @@ function parseSpecs(raw?: string): string {
         <view class="price-row" v-if="order.pointsAmount > 0"><text>积分抵扣</text><text style="color:#775836">-¥{{ order.pointsAmount.toLocaleString() }}</text></view>
         <view class="price-row total-row"><text>实付金额</text><text class="pay-price">¥{{ order.payAmount.toLocaleString() }}</text></view>
       </view>
+
+      <view class="section review-section" v-if="review">
+        <text class="section-title">我的评价</text>
+        <view class="review-stars" style="display:flex;gap:4rpx;margin-bottom:8rpx">
+          <text v-for="i in 5" :key="i" :style="{ color: i <= review.rating ? '#E9C349' : '#ddd', fontSize: '28rpx' }">★</text>
+        </view>
+        <text class="review-text" v-if="review.content">{{ review.content }}</text>
+        <view class="review-images" v-if="review.images?.length">
+          <image v-for="(img, j) in review.images" :key="j" :src="img" mode="aspectFill" class="review-img" @tap="uni.previewImage({ urls: review.images, current: j })" />
+        </view>
+      </view>
     </scroll-view>
 
     <view class="bottom-bar" v-if="order.status === 0">
       <view class="action-btn cancel" @tap="handleCancel">取消订单</view>
       <view class="action-btn pay" @tap="handlePay">立即支付</view>
     </view>
+    <view class="bottom-bar" v-else-if="order.status === 3 && order.reviewed === 0">
+      <view class="action-btn pay" @tap="goReview">去评价</view>
+    </view>
   </view>
 </template>
 
 <style scoped>
 .page { background: #FAFAF8; min-height: 100vh; display: flex; flex-direction: column; }
-.top-bar { display: flex; align-items: center; height: 80rpx; padding: calc(var(--status-bar-height) + 16rpx) 32rpx 0; flex-shrink: 0; }
+.top-bar { display: flex; align-items: center; height: 80rpx; padding: calc(var(--status-bar-height) + 32rpx) 32rpx 0; flex-shrink: 0; }
 .back-btn { width: 60rpx; }
 .back-icon { font-size: 36rpx; color: #775836; }
 .page-title { font-size: 36rpx; font-weight: 600; color: #1C1B1B; margin-left: 16rpx; }
@@ -144,6 +171,9 @@ function parseSpecs(raw?: string): string {
 .price-row:last-child { margin-bottom: 0; }
 .total-row { border-top: 2rpx solid #f0f0f0; padding-top: 12rpx; margin-top: 4rpx; }
 .pay-price { font-size: 32rpx; color: #775836; font-weight: bold; }
+.review-text { font-size: 26rpx; color: #4F453C; line-height: 1.5; display: block; word-break: break-word; }
+.review-images { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 12rpx; }
+.review-img { width: 160rpx; height: 160rpx; border-radius: 12rpx; }
 .bottom-bar { position: sticky; bottom: 0; display: flex; justify-content: flex-end; gap: 16rpx; padding: 16rpx 24rpx; background: rgba(255,255,255,0.95); }
 .action-btn { padding: 16rpx 40rpx; border-radius: 40rpx; font-size: 26rpx; }
 .action-btn.cancel { border: 2rpx solid #D9D2CC; color: #605E5A; }

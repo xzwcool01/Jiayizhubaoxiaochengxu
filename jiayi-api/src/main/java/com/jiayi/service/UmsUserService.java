@@ -20,9 +20,14 @@ public class UmsUserService extends ServiceImpl<UmsUserMapper, UmsUser> {
     private final Random random = new Random();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final WechatService wechatService;
+    private final ActionPointsService actionPointsService;
+    private final MemberService memberService;
 
-    public UmsUserService(WechatService wechatService) {
+    public UmsUserService(WechatService wechatService, ActionPointsService actionPointsService,
+                          MemberService memberService) {
         this.wechatService = wechatService;
+        this.actionPointsService = actionPointsService;
+        this.memberService = memberService;
     }
 
     public R<UmsUser> wxLogin(UserLoginDTO dto) {
@@ -42,7 +47,8 @@ public class UmsUserService extends ServiceImpl<UmsUserMapper, UmsUser> {
         user.setOpenid(openid);
         user.setNickname("微信用户");
         user.setAvatar("");
-        user.setPoints(1000);
+        int registerPoints = actionPointsService.getPoints("register");
+        user.setPoints(registerPoints);
         user.setLevelId(1);
         user.setMemberNo(generateMemberNo());
         if (dto.getRawData() != null && !dto.getRawData().isEmpty()) {
@@ -58,6 +64,9 @@ public class UmsUserService extends ServiceImpl<UmsUserMapper, UmsUser> {
             } catch (Exception ignored) {}
         }
         save(user);
+        if (registerPoints > 0) {
+            memberService.addPointsLog(user.getId(), "register", "注册赠送", registerPoints);
+        }
         return R.ok("new", user);
     }
 
@@ -82,9 +91,11 @@ public class UmsUserService extends ServiceImpl<UmsUserMapper, UmsUser> {
                 && user.getLastSigninTime().toLocalDate().equals(LocalDate.now())) {
             return R.fail(400, "今日已签到");
         }
-        user.setPoints(user.getPoints() == null ? 10 : user.getPoints() + 10);
+        int signinPoints = actionPointsService.getPoints("sign_in");
+        user.setPoints((user.getPoints() == null ? 0 : user.getPoints()) + signinPoints);
         user.setLastSigninTime(LocalDateTime.now());
         updateById(user);
+        memberService.addPointsLog(user.getId(), "sign_in", "每日签到", signinPoints);
         return R.ok(user);
     }
 

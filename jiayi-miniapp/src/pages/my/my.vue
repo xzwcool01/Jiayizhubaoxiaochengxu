@@ -270,7 +270,7 @@ const menus = [
           <text class="points-value">{{ (userInfo?.points || 0).toLocaleString() }}</text>
         </view>
         <view class="points-link" @tap="goPoints">
-          <text>积分商城</text>
+          <text>积分权益</text>
           <MsIcon name="chevron_right" size="28rpx" />
         </view>
       </view>

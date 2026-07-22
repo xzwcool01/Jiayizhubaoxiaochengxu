@@ -113,6 +113,14 @@ public class OrderService {
         }
         if (orderItems.isEmpty()) throw new RuntimeException("无可下单商品");
 
+        for (OmsOrderItem item : orderItems) {
+            PmsProduct p = productMap.get(item.getProductId());
+            if (p == null) continue;
+            if (p.getStock() != null && p.getStock() < item.getQuantity()) {
+                throw new RuntimeException("商品「" + p.getName() + "」库存不足（剩余" + p.getStock() + "）");
+            }
+        }
+
         UmsUserAddress addr = addressMapper.selectById(dto.getAddressId());
         if (addr == null) throw new RuntimeException("请选择收货地址");
 
@@ -211,6 +219,14 @@ public class OrderService {
             orderItemMapper.insert(item);
         }
 
+        for (OmsOrderItem item : orderItems) {
+            PmsProduct p = productMap.get(item.getProductId());
+            if (p == null) continue;
+            p.setStock(p.getStock() != null ? Math.max(0, p.getStock() - item.getQuantity()) : 0);
+            p.setSales(p.getSales() != null ? p.getSales() + item.getQuantity() : item.getQuantity());
+            productMapper.updateById(p);
+        }
+
         if (!cartItemIdsToRemove.isEmpty()) {
             cartService.removeSelected(cartItemIdsToRemove);
         }
@@ -232,10 +248,11 @@ public class OrderService {
         return toOrderVO(order);
     }
 
-    public List<OrderVO> listByUser(Long userId, Integer status) {
+    public List<OrderVO> listByUser(Long userId, Integer status, Integer reviewed) {
         LambdaQueryWrapper<OmsOrder> q = new LambdaQueryWrapper<OmsOrder>()
                 .eq(OmsOrder::getUserId, userId);
         if (status != null) q.eq(OmsOrder::getStatus, status);
+        if (reviewed != null) q.eq(OmsOrder::getReviewed, reviewed);
         q.orderByDesc(OmsOrder::getCreateTime);
         return orderMapper.selectList(q).stream().map(this::toOrderVO).collect(Collectors.toList());
     }
@@ -255,6 +272,15 @@ public class OrderService {
         OmsOrder order = orderMapper.selectOne(new LambdaQueryWrapper<OmsOrder>()
                 .eq(OmsOrder::getId, orderId).eq(OmsOrder::getUserId, userId));
         if (order == null || order.getStatus() != 0) return;
+        List<OmsOrderItem> items = orderItemMapper.selectList(
+                new LambdaQueryWrapper<OmsOrderItem>().eq(OmsOrderItem::getOrderId, orderId));
+        for (OmsOrderItem item : items) {
+            PmsProduct p = productMapper.selectById(item.getProductId());
+            if (p == null) continue;
+            p.setStock(p.getStock() != null ? p.getStock() + item.getQuantity() : item.getQuantity());
+            p.setSales(p.getSales() != null ? Math.max(0, p.getSales() - item.getQuantity()) : 0);
+            productMapper.updateById(p);
+        }
         order.setStatus(4);
         orderMapper.updateById(order);
     }
@@ -305,6 +331,7 @@ public class OrderService {
             vo.setNote(o.getNote());
             vo.setPaidAt(o.getPaidAt());
             vo.setCouponId(o.getCouponId());
+            vo.setReviewed(o.getReviewed());
             vo.setCreateTime(o.getCreateTime());
             List<OmsOrderItem> orderItems = itemMap.getOrDefault(o.getId(), List.of());
             vo.setItems(orderItems.stream().map(i -> {
@@ -364,6 +391,7 @@ public class OrderService {
         vo.setAddressSnapshot(order.getAddressSnapshot());
         vo.setNote(order.getNote());
         vo.setPaidAt(order.getPaidAt());
+        vo.setReviewed(order.getReviewed());
         vo.setCreateTime(order.getCreateTime());
         vo.setMockPay(true);
         List<OmsOrderItem> items = orderItemMapper.selectList(

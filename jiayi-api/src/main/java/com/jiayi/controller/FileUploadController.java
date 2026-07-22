@@ -69,6 +69,18 @@ public class FileUploadController {
         }
     }
 
+    @PostMapping("/upload/review-image")
+    public R<String> uploadReviewImage(@RequestParam("file") MultipartFile file,
+                                       @RequestParam("productId") Long productId) {
+        if (file.isEmpty()) return R.error("文件为空");
+        String subDir = "reviews" + File.separator + productId;
+        String filename = saveFile(file, subDir);
+        if (filename == null) return R.error("上传失败");
+        String url = fullUrl("/uploads/reviews/" + productId + "/" + filename);
+        log.info("评价图片上传成功: productId={}, url={}", productId, url);
+        return R.ok(url);
+    }
+
     @PostMapping("/admin/product/upload-image")
     public R<String> uploadProductImage(@RequestParam("file") MultipartFile file,
                                         @RequestParam("productType") Integer productType) {

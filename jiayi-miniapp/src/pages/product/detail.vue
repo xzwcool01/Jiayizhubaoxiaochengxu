@@ -9,6 +9,7 @@ import AiWearCard from '@/components/AiWearCard.vue'
 import VideoShowcase from '@/components/VideoShowcase.vue'
 import ProductGallery from '@/components/ProductGallery.vue'
 import DisclaimerFooter from '@/components/DisclaimerFooter.vue'
+import { getTop2Reviews, getReviewCount, type ReviewVO } from '@/api/review'
 
 const product = ref<PmsProduct | null>(null)
 const images = ref<string[]>([])
@@ -21,9 +22,15 @@ const pageConfig = ref<ProductPageConfig | null>(null)
 const galleryImages = ref<string[]>([])
 const isFavorited = ref(false)
 const favoriting = ref(false)
+const topReviews = ref<ReviewVO[]>([])
+const reviewTotal = ref(0)
 
 async function handleAddCart() {
   if (!product.value) return
+  if (product.value.stock != null && product.value.stock <= 0) {
+    uni.showToast({ title: '商品已售罄', icon: 'none' })
+    return
+  }
   if (!uni.getStorageSync('token')) {
     uni.showToast({ title: '请先登录', icon: 'none' })
     uni.switchTab({ url: '/pages/my/my' })
@@ -37,6 +44,10 @@ async function handleAddCart() {
 
 function handleBuyNow() {
   if (!product.value) return
+  if (product.value.stock != null && product.value.stock <= 0) {
+    uni.showToast({ title: '商品已售罄', icon: 'none' })
+    return
+  }
   if (!uni.getStorageSync('token')) {
     uni.showToast({ title: '请先登录', icon: 'none' })
     uni.switchTab({ url: '/pages/my/my' })
@@ -182,6 +193,8 @@ onLoad((options) => {
       if (uni.getStorageSync('token')) {
         getFavoriteStatus(id).then(r => { if (r.code === 200) isFavorited.value = r.data }).catch(() => {})
       }
+      getTop2Reviews(id).then(r => { if (r.code === 200) topReviews.value = r.data || [] }).catch(() => {})
+      getReviewCount(id).then(r => { if (r.code === 200) reviewTotal.value = r.data || 0 }).catch(() => {})
     }
     loading.value = false
   }).catch(() => { loading.value = false })
@@ -221,6 +234,11 @@ onShareAppMessage(() => {
         ¥{{ formatPrice(product.price) }}
         <text v-if="product.originalPrice" style="font-size:24rpx;color:#999;text-decoration:line-through;margin-left:12rpx;font-weight:400">¥{{ formatPrice(product.originalPrice) }}</text>
       </view>
+      <view class="stock-row" v-if="product">
+        <text class="stock-text" v-if="product.stock != null && product.stock > 0">库存 {{ product.stock }}</text>
+        <text class="stock-text sold-out" v-else-if="product.stock != null">已售罄</text>
+        <text class="sales-text">已售 {{ product.sales || 0 }}</text>
+      </view>
       <!-- NEW: AI穿戴 + 抖音视频（价格下方、描述上方） -->
       <AiWearCard v-if="pageConfig?.aiEnabled" />
       <VideoShowcase v-if="pageConfig?.videoEnabled" :cover="pageConfig?.videoCover || images[0] || ''" :videoUrl="pageConfig?.videoUrl || ''" />
@@ -239,16 +257,14 @@ onShareAppMessage(() => {
       </view>
     </view>
     <view class="reviews">
-      <view class="review-header"><text class="review-title">用户评价 (128)</text><text class="review-link">查看全部</text></view>
-      <view class="review-item">
-        <view class="reviewer"><text class="reviewer-name">C.**</text><text class="reviewer-date">2024.07.10</text></view>
-        <view class="review-stars"><MsIcon name="star" size="28rpx" color="#E9C349" /><MsIcon name="star" size="28rpx" color="#E9C349" /><MsIcon name="star" size="28rpx" color="#E9C349" /><MsIcon name="star" size="28rpx" color="#E9C349" /><MsIcon name="star" size="28rpx" color="#E9C349" /></view>
-        <text class="review-text">非常精致的戒指，实物比图片更有质感。珍珠的光泽非常温润，戴上去也很合适</text>
-      </view>
-      <view class="review-item">
-        <view class="reviewer"><text class="reviewer-name">L***y</text><text class="reviewer-date">2024.07.08</text></view>
-        <view class="review-stars"><MsIcon name="star" size="28rpx" color="#E9C349" /><MsIcon name="star" size="28rpx" color="#E9C349" /><MsIcon name="star" size="28rpx" color="#E9C349" /><MsIcon name="star" size="28rpx" color="#E9C349" /><MsIcon name="star" size="28rpx" color="#E9C349" /></view>
-        <text class="review-text">送朋友的结婚礼物，包装非常精美，朋友很喜欢。玫瑰金很显白。</text>
+      <view class="review-header"><text class="review-title">用户评价 ({{ reviewTotal || topReviews.length }})</text><text class="review-link" @tap="product?.id && uni.navigateTo({ url: '/pages/product/review?id=' + product.id })">查看全部</text></view>
+      <view v-if="!topReviews.length" class="review-item"><text class="review-text" style="color:#999;text-align:center;display:block">暂无评价</text></view>
+      <view v-for="r in topReviews" :key="r.id" class="review-item">
+        <view class="reviewer"><text class="reviewer-name">{{ r.isAnonymous ? '匿名用户' : r.nickname || '用户' }}</text><text class="reviewer-date">{{ r.createTime?.substring(0, 10) }}</text></view>
+        <view class="review-stars" style="display:flex;gap:4rpx;margin:8rpx 0">
+          <text v-for="i in 5" :key="i" :style="{ color: i <= r.rating ? '#E9C349' : '#ddd', fontSize: '28rpx' }">★</text>
+        </view>
+        <text class="review-text">{{ r.content || '' }}</text>
       </view>
     </view>
     <!-- NEW: 竖向大图展示 + 免责声明（置于用户评价底部） -->
@@ -289,6 +305,10 @@ onShareAppMessage(() => {
 .info-name { font-size: 40rpx; font-weight: 600; color: #1C1B1B; font-family: 'Noto Serif SC', serif; }
 .info-sub { font-size: 22rpx; color: #605E5A; display: block; margin-top: 4rpx; }
 .info-price { font-size: 56rpx; font-weight: 700; color: #775836; margin-top: 16rpx; }
+.stock-row { display: flex; align-items: center; gap: 24rpx; margin-top: 16rpx; padding: 12rpx 20rpx; background: #F6F4F2; border-radius: 12rpx; }
+.stock-text { font-size: 22rpx; color: #775836; font-weight: 500; }
+.stock-text.sold-out { color: #CF6679; }
+.sales-text { font-size: 22rpx; color: #999; }
 .info-tags { display: flex; gap: 16rpx; margin-top: 24rpx; }
 .tag { background-color: #F0EBE7; font-size: 20rpx; color: #775836; padding: 8rpx 20rpx; border-radius: 40rpx; }
 .selector { margin-top: 32rpx; }
