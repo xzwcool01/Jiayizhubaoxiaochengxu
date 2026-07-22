@@ -11,4 +11,6 @@ public class CreateOrderDTO {
     private Boolean usePoints;
     private String note;
     private List<Long> cartItemIds;
+    private Long productId;
+    private Integer quantity;
 }

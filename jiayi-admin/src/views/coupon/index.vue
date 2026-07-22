@@ -2,6 +2,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getCouponList, createCoupon, updateCoupon, issueCoupon, searchUsers, type AdminCouponVO, type UmsUser } from '@/api/coupon'
+import { getProductList, type PmsProduct } from '@/api/product'
 
 const list = ref<AdminCouponVO[]>([])
 const total = ref(0)
@@ -9,13 +10,14 @@ const page = ref(1)
 const size = ref(20)
 const loading = ref(false)
 const editVisible = ref(false)
-const editing = ref<AdminCouponVO>({ name: '', type: 0, value: 0, minAmount: 0, maxAmount: 0 })
+const editing = ref<AdminCouponVO>({ name: '', type: 0, value: 0, minAmount: 0, maxAmount: 0, productIds: [] })
 const isNew = ref(true)
 const issueVisible = ref(false)
 const issueCouponId = ref(0)
 const searchKeyword = ref('')
 const candidates = ref<UmsUser[]>([])
 const selectedUserIds = ref<number[]>([])
+const productOptions = ref<PmsProduct[]>([])
 
 async function fetchData() {
   loading.value = true
@@ -89,6 +91,11 @@ function getRemain(row: AdminCouponVO) {
 
 function formatTime(t?: string) { return t ? t.replace('T', ' ').substring(0, 16) : '-' }
 
+async function searchProducts(keyword: string) {
+  const res = await getProductList({ page: 1, size: 20, productType: 0, keyword })
+  if (res.code === 200) productOptions.value = res.data.records || []
+}
+
 onMounted(fetchData)
 </script>
 
@@ -145,6 +152,12 @@ onMounted(fetchData)
         <el-form-item label="结束时间"><el-date-picker v-model="editing.endTime" type="datetime" value-format="YYYY-MM-DDTHH:mm:ss" style="width:100%" /></el-form-item>
         <el-form-item label="总发行量"><el-input-number v-model="editing.totalCount" :min="0" style="width:200px" /></el-form-item>
         <el-form-item label="每人限领"><el-input-number v-model="editing.perUserLimit" :min="1" style="width:200px" /></el-form-item>
+        <el-form-item label="关联商品">
+          <el-select v-model="editing.productIds" multiple filterable remote :remote-method="searchProducts" placeholder="搜索并选择商品" style="width:100%">
+            <el-option v-for="p in productOptions" :key="p.id" :label="p.name" :value="p.id" />
+          </el-select>
+          <span style="color:#999;font-size:12px;margin-top:4px;display:block">不选 = 全部商品可用</span>
+        </el-form-item>
       </el-form>
       <template #footer><el-button @click="editVisible = false">取消</el-button><el-button type="primary" @click="handleSave">保存</el-button></template>
     </el-dialog>

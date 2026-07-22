@@ -14,3 +14,8 @@ export function getMyCoupons() {
   const openid = uni.getStorageSync('token') || ''
   return get<UserCouponVO[]>('/coupon/my', { openid })
 }
+
+export function getMyApplicableCoupons(productIds: number[]) {
+  const openid = uni.getStorageSync('token') || ''
+  return get<UserCouponVO[]>('/coupon/my-applicable', { openid, productIds: productIds.join(',') })
+}

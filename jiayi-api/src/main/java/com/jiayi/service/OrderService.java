@@ -34,6 +34,7 @@ public class OrderService {
     private final CouponService couponService;
     private final PointsService pointsService;
     private final OmsOrderDeliveryMapper deliveryMapper;
+    private final SmsCouponProductMapper couponProductMapper;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
@@ -45,7 +46,8 @@ public class OrderService {
                         SmsUserCouponMapper userCouponMapper,
                         PmsProductMapper productMapper, UmsUserMapper userMapper,
                         CartService cartService, CouponService couponService, PointsService pointsService,
-                        OmsOrderDeliveryMapper deliveryMapper) {
+                        OmsOrderDeliveryMapper deliveryMapper,
+                        SmsCouponProductMapper couponProductMapper) {
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
         this.addressMapper = addressMapper;
@@ -57,38 +59,62 @@ public class OrderService {
         this.couponService = couponService;
         this.pointsService = pointsService;
         this.deliveryMapper = deliveryMapper;
+        this.couponProductMapper = couponProductMapper;
     }
 
     @Transactional
     public OmsOrder createOrder(CreateOrderDTO dto, Long userId) {
-        List<UmsUserCart> cartItems = cartService.getSelectedItems(userId, dto.getCartItemIds());
-        if (cartItems.isEmpty()) throw new RuntimeException("未选择商品");
-
-        UmsUserAddress addr = addressMapper.selectById(dto.getAddressId());
-        if (addr == null) throw new RuntimeException("请选择收货地址");
-
-        Set<Long> productIds = cartItems.stream().map(UmsUserCart::getProductId).collect(Collectors.toSet());
-        Map<Long, PmsProduct> productMap = productMapper.selectBatchIds(productIds).stream()
-                .collect(Collectors.toMap(PmsProduct::getId, p -> p));
-
-        BigDecimal totalAmount = BigDecimal.ZERO;
+        Set<Long> productIds;
+        Map<Long, PmsProduct> productMap;
         List<OmsOrderItem> orderItems = new ArrayList<>();
-        for (UmsUserCart c : cartItems) {
-            PmsProduct p = productMap.get(c.getProductId());
-            if (p == null) continue;
-            BigDecimal subtotal = p.getPrice().multiply(BigDecimal.valueOf(c.getQuantity()));
-            totalAmount = totalAmount.add(subtotal);
+        BigDecimal totalAmount = BigDecimal.ZERO;
+
+        boolean buyNow = dto.getProductId() != null;
+        List<Long> cartItemIdsToRemove = List.of();
+        if (buyNow) {
+            int qty = dto.getQuantity() != null && dto.getQuantity() > 0 ? dto.getQuantity() : 1;
+            PmsProduct p = productMapper.selectById(dto.getProductId());
+            if (p == null) throw new RuntimeException("商品不存在");
+            productIds = Set.of(p.getId());
+            productMap = Map.of(p.getId(), p);
+            BigDecimal subtotal = p.getPrice().multiply(BigDecimal.valueOf(qty));
+            totalAmount = subtotal;
             OmsOrderItem item = new OmsOrderItem();
             item.setProductId(p.getId());
             item.setProductName(p.getName());
             item.setProductSpecs(p.getSpecs());
             item.setProductImage(p.getMainImage());
             item.setPrice(p.getPrice());
-            item.setQuantity(c.getQuantity());
+            item.setQuantity(qty);
             item.setSubtotal(subtotal);
             orderItems.add(item);
+        } else {
+            List<UmsUserCart> cartItems = cartService.getSelectedItems(userId, dto.getCartItemIds());
+            if (cartItems.isEmpty()) throw new RuntimeException("未选择商品");
+            cartItemIdsToRemove = cartItems.stream().map(UmsUserCart::getId).collect(Collectors.toList());
+            productIds = cartItems.stream().map(UmsUserCart::getProductId).collect(Collectors.toSet());
+            productMap = productMapper.selectBatchIds(productIds).stream()
+                    .collect(Collectors.toMap(PmsProduct::getId, p -> p));
+            for (UmsUserCart c : cartItems) {
+                PmsProduct p = productMap.get(c.getProductId());
+                if (p == null) continue;
+                BigDecimal subtotal = p.getPrice().multiply(BigDecimal.valueOf(c.getQuantity()));
+                totalAmount = totalAmount.add(subtotal);
+                OmsOrderItem item = new OmsOrderItem();
+                item.setProductId(p.getId());
+                item.setProductName(p.getName());
+                item.setProductSpecs(p.getSpecs());
+                item.setProductImage(p.getMainImage());
+                item.setPrice(p.getPrice());
+                item.setQuantity(c.getQuantity());
+                item.setSubtotal(subtotal);
+                orderItems.add(item);
+            }
         }
         if (orderItems.isEmpty()) throw new RuntimeException("无可下单商品");
+
+        UmsUserAddress addr = addressMapper.selectById(dto.getAddressId());
+        if (addr == null) throw new RuntimeException("请选择收货地址");
 
         BigDecimal couponAmount = BigDecimal.ZERO;
         if (dto.getCouponId() != null) {
@@ -96,14 +122,19 @@ public class OrderService {
             if (uc != null && !uc.getUsed()) {
                 SmsCoupon c = couponMapper.selectById(uc.getCouponId());
                 if (c != null && totalAmount.compareTo(c.getMinAmount()) >= 0) {
-                    if (c.getType() == 0) {
-                        couponAmount = c.getValue().min(totalAmount);
-                        if (c.getMaxAmount().compareTo(BigDecimal.ZERO) > 0)
-                            couponAmount = couponAmount.min(c.getMaxAmount());
+                    List<SmsCouponProduct> links = couponProductMapper.selectList(
+                            new LambdaQueryWrapper<SmsCouponProduct>().eq(SmsCouponProduct::getCouponId, c.getId()));
+                    boolean hasProductBinding = links.stream().anyMatch(l -> l.getProductId() != null);
+                    if (hasProductBinding) {
+                        Set<Long> allowedPids = links.stream().map(SmsCouponProduct::getProductId).filter(Objects::nonNull).collect(Collectors.toSet());
+                        boolean matches = productIds.stream().anyMatch(allowedPids::contains);
+                        if (!matches) {
+                            log.warn("优惠券 {} 不适用于订单商品, 跳过使用", c.getId());
+                        } else {
+                            couponAmount = applyCoupon(c, totalAmount);
+                        }
                     } else {
-                        couponAmount = totalAmount.multiply(c.getValue()).divide(BigDecimal.valueOf(100));
-                        if (c.getMaxAmount().compareTo(BigDecimal.ZERO) > 0)
-                            couponAmount = couponAmount.min(c.getMaxAmount());
+                        couponAmount = applyCoupon(c, totalAmount);
                     }
                 }
             }
@@ -114,7 +145,7 @@ public class OrderService {
         if (Boolean.TRUE.equals(dto.getUsePoints())) {
             UmsUser user = userMapper.selectById(userId);
             if (user != null && user.getPoints() > 0) {
-                Set<Long> pids = cartItems.stream().map(UmsUserCart::getProductId).collect(Collectors.toSet());
+                Set<Long> pids = productIds;
                 List<com.jiayi.dto.PointsRuleVO> rules = pointsService.getRulesForProducts(new ArrayList<>(pids));
                 if (!rules.isEmpty()) {
                     com.jiayi.dto.PointsRuleVO rule = rules.get(0);
@@ -180,7 +211,9 @@ public class OrderService {
             orderItemMapper.insert(item);
         }
 
-        cartService.removeSelected(cartItems.stream().map(UmsUserCart::getId).collect(Collectors.toList()));
+        if (!cartItemIdsToRemove.isEmpty()) {
+            cartService.removeSelected(cartItemIdsToRemove);
+        }
 
         if (dto.getCouponId() != null && couponAmount.compareTo(BigDecimal.ZERO) > 0) {
             couponService.useCoupon(dto.getCouponId(), order.getId());
@@ -301,6 +334,20 @@ public class OrderService {
                 new LambdaQueryWrapper<OmsOrder>()
                         .eq(OmsOrder::getUserId, userId)
                         .eq(OmsOrder::getStatus, 0));
+    }
+
+    private BigDecimal applyCoupon(SmsCoupon c, BigDecimal totalAmount) {
+        BigDecimal amount;
+        if (c.getType() == 0) {
+            amount = c.getValue().min(totalAmount);
+            if (c.getMaxAmount().compareTo(BigDecimal.ZERO) > 0)
+                amount = amount.min(c.getMaxAmount());
+        } else {
+            amount = totalAmount.multiply(BigDecimal.valueOf(100).subtract(c.getValue())).divide(BigDecimal.valueOf(100));
+            if (c.getMaxAmount().compareTo(BigDecimal.ZERO) > 0)
+                amount = amount.min(c.getMaxAmount());
+        }
+        return amount;
     }
 
     private OrderVO toOrderVO(OmsOrder order) {

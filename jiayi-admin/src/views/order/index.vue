@@ -23,6 +23,11 @@ const previewLoading = ref(false)
 const previewWaybillNo = ref('')
 const previewQrCode = ref('')
 
+function getRoutes() {
+  if (trackData.value?.routes) return trackData.value.routes
+  return trackData.value?.routeResps?.[0]?.routes || []
+}
+
 const statusMap: Record<number, string> = { 0: '待付款', 1: '待发货', 2: '待收货', 3: '已完成', 4: '已关闭' }
 const statusColors: Record<number, string> = { 0: '#e6a23c', 1: '#409eff', 2: '#67c23a', 3: '#909399', 4: '#c0c4cc' }
 const statusOptions = [
@@ -317,8 +322,8 @@ onMounted(fetchData)
           运单号：<strong>{{ currentTrackNo }}</strong>
         </div>
         <div v-if="trackData">
-          <div v-if="trackData.routes?.length" style="padding-left:20px;border-left:2px solid #e8e8e8">
-            <div v-for="(r, i) in trackData.routes" :key="i" style="position:relative;padding:0 0 16px 16px">
+          <div v-if="getRoutes().length" style="padding-left:20px;border-left:2px solid #e8e8e8">
+            <div v-for="(r, i) in getRoutes()" :key="i" style="position:relative;padding:0 0 16px 16px">
               <div :style="{position:'absolute',left:'-7px',top:'0',width:'12px',height:'12px',borderRadius:'50%',background:i===0?'#409eff':'#d9d9d9',border:'2px solid #fff',boxShadow:'0 0 0 2px #e8e8e8'}"></div>
               <div style="font-size:13px;font-weight:500;margin-bottom:2px">{{ r.remark || r.acceptAddress || '-' }}</div>
               <div style="font-size:12px;color:#999">{{ formatTrackTime(r.acceptTime) }}</div>

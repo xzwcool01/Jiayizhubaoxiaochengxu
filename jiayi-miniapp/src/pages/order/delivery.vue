@@ -22,8 +22,9 @@ async function load(orderId: number) {
   if (delRes.code === 200 && delRes.data) {
     delivery.value = delRes.data
   }
-  if (trackRes?.code === 200 && trackRes.data?.routes) {
-    routes.value = trackRes.data.routes
+  if (trackRes?.code === 200 && trackRes.data) {
+    const r = trackRes.data.routes || trackRes.data.routeResps?.[0]?.routes
+    if (r) routes.value = r
   }
   loaded.value = true
 }

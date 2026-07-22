@@ -210,7 +210,7 @@ public class SfExpressService {
             if (data instanceof String) {
                 Map<String, Object> apiResult = objectMapper.readValue((String) data, Map.class);
                 if (!Boolean.TRUE.equals(apiResult.get("success"))) {
-                    throw new RuntimeException("顺丰下单失败: " + apiResult.getOrDefault("errorMsg", data));
+                    throw new RuntimeException("顺丰业务失败: " + apiResult.getOrDefault("errorMsg", data));
                 }
                 Object resultData = apiResult.get("msgData");
                 if (resultData instanceof String) return objectMapper.readValue((String) resultData, Map.class);
@@ -234,7 +234,7 @@ public class SfExpressService {
         Map<String, Object> apiResult = objectMapper.readValue(apiResultData, Map.class);
         if (!Boolean.TRUE.equals(apiResult.get("success"))) {
             String errorMsg = (String) apiResult.get("errorMsg");
-            throw new RuntimeException("顺丰下单失败: " + (errorMsg != null ? errorMsg : apiResultData));
+            throw new RuntimeException("顺丰业务失败: " + (errorMsg != null ? errorMsg : apiResultData));
         }
 
         Object resultData = apiResult.get("msgData");

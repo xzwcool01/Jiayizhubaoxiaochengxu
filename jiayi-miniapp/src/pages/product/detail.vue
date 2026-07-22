@@ -35,6 +35,16 @@ async function handleAddCart() {
   } catch { uni.showToast({ title: '操作失败', icon: 'none' }) }
 }
 
+function handleBuyNow() {
+  if (!product.value) return
+  if (!uni.getStorageSync('token')) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    uni.switchTab({ url: '/pages/my/my' })
+    return
+  }
+  uni.navigateTo({ url: '/pages/order/confirm?productId=' + product.value.id + '&qty=1' })
+}
+
 async function toggleFav() {
   if (!product.value || favoriting.value) return
   const token = uni.getStorageSync('token') || ''
@@ -248,7 +258,7 @@ onShareAppMessage(() => {
     <view class="bottom-bar">
       <view class="bar-icon" @tap="toggleFav"><text :class="['fav-icon', isFavorited ? 'fav-active' : 'fav-inactive']">{{ isFavorited ? '♥' : '♡' }}</text></view>
       <view class="bar-btn secondary" @tap="handleAddCart"><text>加入购物车</text></view>
-      <view class="bar-btn primary"><text>立即购买</text></view>
+      <view class="bar-btn primary" @tap="handleBuyNow"><text>立即购买</text></view>
     </view>
 
     <view v-if="showPoster" class="poster-overlay" @tap="showPoster = false">

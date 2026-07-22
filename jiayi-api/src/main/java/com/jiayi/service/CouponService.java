@@ -57,6 +57,27 @@ public class CouponService {
                 }).collect(Collectors.toList());
     }
 
+    public List<UserCouponVO> getUserApplicableCoupons(Long userId, List<Long> productIds) {
+        List<UserCouponVO> all = getUserCoupons(userId);
+        if (all.isEmpty() || productIds == null || productIds.isEmpty()) return all;
+        Set<Long> couponIds = all.stream().map(UserCouponVO::getCouponId).collect(Collectors.toSet());
+        Map<Long, Set<Long>> productMap = couponProductMapper.selectList(
+                new LambdaQueryWrapper<SmsCouponProduct>().in(SmsCouponProduct::getCouponId, couponIds))
+                .stream()
+                .collect(Collectors.groupingBy(
+                        SmsCouponProduct::getCouponId,
+                        Collectors.mapping(SmsCouponProduct::getProductId, Collectors.toSet())));
+        return all.stream().filter(vo -> {
+            Set<Long> allowed = productMap.get(vo.getCouponId());
+            if (allowed == null || allowed.isEmpty()) return true;
+            if (allowed.contains(null)) return true;
+            for (Long pid : productIds) {
+                if (allowed.contains(pid)) return true;
+            }
+            return false;
+        }).collect(Collectors.toList());
+    }
+
     public List<SmsCoupon> getApplicableCoupons(List<Long> productIds) {
         List<SmsCoupon> all = couponMapper.selectList(new LambdaQueryWrapper<SmsCoupon>()
                 .eq(SmsCoupon::getStatus, 1)

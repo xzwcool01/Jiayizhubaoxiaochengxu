@@ -20,7 +20,8 @@
     {"path": "pages/order/detail", "style": {"navigationStyle": "custom"}},
     {"path": "pages/order/success", "style": {"navigationStyle": "custom"}},
     {"path": "pages/order/pay", "style": {"navigationStyle": "custom"}},
-    {"path": "pages/order/delivery", "style": {"navigationStyle": "custom"}}
+    {"path": "pages/order/delivery", "style": {"navigationStyle": "custom"}},
+    {"path": "pages/my/coupon", "style": {"navigationStyle": "custom"}}
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",

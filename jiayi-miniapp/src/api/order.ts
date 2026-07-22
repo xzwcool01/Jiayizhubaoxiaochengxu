@@ -39,6 +39,8 @@ export function createOrder(params: {
   usePoints?: boolean
   note?: string
   cartItemIds?: number[]
+  productId?: number
+  quantity?: number
 }) {
   return post<OrderVO>('/order/create', { openid: getOpenid(), ...params })
 }

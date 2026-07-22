@@ -2,13 +2,14 @@
 import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import MsIcon from '@/components/MsIcon.vue'
-import { getCartList, type CartItemVO } from '@/api/cart'
-import { getMyCoupons, type UserCouponVO } from '@/api/coupon'
+import { getCartList } from '@/api/cart'
+import { getProduct } from '@/api/product'
+import { getMyApplicableCoupons, type UserCouponVO } from '@/api/coupon'
 import { getPointsInfo } from '@/api/points'
 import { getAddressList } from '@/api/address'
 import { createOrder } from '@/api/order'
 
-const items = ref<CartItemVO[]>([])
+const items = ref<any[]>([])
 const addressText = ref('请选择收货地址')
 const addressId = ref<number>(0)
 const showAddressPicker = ref(false)
@@ -22,17 +23,27 @@ const selectedRuleIdx = ref(0)
 const note = ref('')
 const submitting = ref(false)
 
+function getBuyNowParams(): { productId: number; quantity: number } {
+  const pages = getCurrentPages()
+  const page = pages[pages.length - 1] as any
+  const opts = page?.$page?.options || page?.options || {}
+  return {
+    productId: Number(opts.productId || 0),
+    quantity: Number(opts.qty || 1)
+  }
+}
+
 const activeRule = computed(() => {
   if (!pointsInfo.value.rules.length) return null
   return pointsInfo.value.rules[selectedRuleIdx.value] || pointsInfo.value.rules[0]
 })
 
-const totalAmount = computed(() => items.value.reduce((s, i) => s + i.price * i.quantity, 0))
+const totalAmount = computed(() => items.value.reduce((s: number, i: any) => s + i.price * i.quantity, 0))
 const couponAmount = computed(() => {
   if (!selectedCoupon.value) return 0
   const c = selectedCoupon.value
   if (c.type === 0) return Math.min(c.value, Math.max(0, totalAmount.value - c.minAmount))
-  return Math.min(totalAmount.value * c.value / 100, c.maxAmount || Infinity)
+  return Math.min(totalAmount.value * (100 - c.value) / 100, c.maxAmount || Infinity)
 })
 const pointsAmount = computed(() => {
   if (!usePoints.value || !activeRule.value) return 0
@@ -52,13 +63,41 @@ const pointsDeduct = computed(() => {
 const payAmount = computed(() => Math.max(0, totalAmount.value - couponAmount.value - pointsAmount.value))
 const totalDiscount = computed(() => couponAmount.value + pointsAmount.value)
 
-const productIds = computed(() => items.value.map(i => i.productId))
+const productIds = computed(() => items.value.map((i: any) => i.productId))
 
 async function loadData() {
   if (!uni.getStorageSync('token')) { uni.switchTab({ url: '/pages/my/my' }); return }
-  const cartRes = await getCartList()
-  if (cartRes.code === 200) items.value = (cartRes.data || []).filter(i => i.selected)
-  if (!items.value.length) { uni.showToast({ title: '请选择商品', icon: 'none' }); uni.navigateBack(); return }
+
+  const { productId, quantity } = getBuyNowParams()
+  if (productId) {
+    try {
+      const res = await getProduct(productId)
+      if (res.code === 200 && res.data) {
+        const p = res.data
+        items.value = [{
+          id: p.id,
+          productId: p.id,
+          name: p.name,
+          mainImage: p.mainImage || '',
+          specs: p.specs || '',
+          price: p.price,
+          quantity
+        }]
+      } else {
+        uni.showToast({ title: '商品不存在', icon: 'none' })
+        uni.navigateBack()
+        return
+      }
+    } catch {
+      uni.showToast({ title: '加载失败', icon: 'none' })
+      uni.navigateBack()
+      return
+    }
+  } else {
+    const cartRes = await getCartList()
+    if (cartRes.code === 200) items.value = (cartRes.data || []).filter((i: any) => i.selected)
+    if (!items.value.length) { uni.showToast({ title: '请选择商品', icon: 'none' }); uni.navigateBack(); return }
+  }
 
   const addrStr = uni.getStorageSync('selectedAddress')
   if (addrStr) {
@@ -78,7 +117,7 @@ async function loadData() {
   }
 
   const [couponRes, pointsRes] = await Promise.all([
-    getMyCoupons(),
+    getMyApplicableCoupons(productIds.value),
     getPointsInfo(productIds.value)
   ])
   if (couponRes.code === 200) coupons.value = couponRes.data || []
@@ -127,13 +166,20 @@ async function submitOrder() {
   }
   submitting.value = true
   try {
-    const res = await createOrder({
+    const { productId, quantity } = getBuyNowParams()
+    const params: any = {
       addressId: addressId.value,
       couponId: selectedCoupon.value?.id,
       usePoints: usePoints.value,
-      note: note.value,
-      cartItemIds: items.value.map(i => i.id)
-    })
+      note: note.value
+    }
+    if (productId) {
+      params.productId = productId
+      params.quantity = quantity
+    } else {
+      params.cartItemIds = items.value.map((i: any) => i.id)
+    }
+    const res = await createOrder(params)
     if (res.code === 200 && res.data) {
       uni.removeStorageSync('selectedAddress')
       if (res.data.mockPay) {
@@ -159,7 +205,7 @@ function parseSpecs(raw: string | undefined | null): string {
 const couponLabel = computed(() => {
   if (!selectedCoupon.value) return coupons.value.length ? '请选择' : '暂无可用'
   const c = selectedCoupon.value
-  return c.type === 0 ? `-¥${couponAmount.value.toFixed(2)}` : `-${c.value}%`
+  return c.type === 0 ? `-¥${couponAmount.value.toFixed(2)}` : (c.value / 10 % 1 === 0 ? (c.value / 10) + '折' : (c.value / 10) + '折')
 })
 
 onShow(loadData)

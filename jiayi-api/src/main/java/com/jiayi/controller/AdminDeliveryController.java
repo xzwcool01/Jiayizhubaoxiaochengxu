@@ -45,8 +45,7 @@ public class AdminDeliveryController {
     @GetMapping("/track")
     public R<?> track(@RequestParam String trackingNo, @RequestParam(defaultValue = "") String phone) {
         try {
-            String phoneLast4 = phone.length() >= 4 ? phone.substring(phone.length() - 4) : phone;
-            Map<String, Object> result = sfExpressService.queryRoute(trackingNo, phoneLast4);
+            Map<String, Object> result = sfExpressService.queryRoute(trackingNo, "");
             return R.ok(result);
         } catch (Exception e) {
             return R.error("查询物流失败: " + e.getMessage());
