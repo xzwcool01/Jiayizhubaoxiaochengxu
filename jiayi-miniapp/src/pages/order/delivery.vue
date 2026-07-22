@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { getDelivery, type DeliveryVO } from '@/api/order'
+import { getDelivery, getDeliveryTrack, type DeliveryVO } from '@/api/order'
 
 const delivery = ref<DeliveryVO | null>(null)
+const routes = ref<any[]>([])
 const loaded = ref(false)
 
 onShow(() => {
@@ -14,9 +15,15 @@ onShow(() => {
 })
 
 async function load(orderId: number) {
-  const res = await getDelivery(orderId)
-  if (res.code === 200 && res.data) {
-    delivery.value = res.data
+  const [delRes, trackRes] = await Promise.all([
+    getDelivery(orderId),
+    getDeliveryTrack(orderId).catch(() => null)
+  ])
+  if (delRes.code === 200 && delRes.data) {
+    delivery.value = delRes.data
+  }
+  if (trackRes?.code === 200 && trackRes.data?.routes) {
+    routes.value = trackRes.data.routes
   }
   loaded.value = true
 }
@@ -25,6 +32,11 @@ function copyNo() {
   if (delivery.value?.trackingNo) {
     uni.setClipboardData({ data: delivery.value.trackingNo })
   }
+}
+
+function formatTrackTime(t?: string) {
+  if (!t) return ''
+  return t.replace('T', ' ').substring(0, 19)
 }
 </script>
 
@@ -67,6 +79,19 @@ function copyNo() {
           <text class="card-value">{{ delivery.receivedAt?.replace('T', ' ') }}</text>
         </view>
       </view>
+
+      <view v-if="routes.length" class="card" style="margin-top:20rpx">
+        <view style="font-size:28rpx;font-weight:600;margin-bottom:20rpx;color:#1C1B1B">物流轨迹</view>
+        <view class="route-list">
+          <view v-for="(r, i) in routes" :key="i" class="route-item" :class="{ first: i === 0 }">
+            <view class="route-dot" :class="{ active: i === 0 }"></view>
+            <view class="route-info">
+              <text class="route-remark">{{ r.remark || r.acceptAddress || '' }}</text>
+              <text class="route-time">{{ formatTrackTime(r.acceptTime) }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
     </view>
   </view>
 </template>
@@ -88,4 +113,13 @@ function copyNo() {
 .tracking-no { max-width: 360rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .copy-btn { font-size: 22rpx; color: #775836; padding: 4rpx 16rpx; border: 2rpx solid #775836; border-radius: 8rpx; }
 .received { color: #67c23a; }
+.route-list { padding-left: 20rpx; border-left: 2rpx solid #e8e8e8; }
+.route-item { position: relative; padding: 0 0 30rpx 24rpx; }
+.route-item.first { padding-top: 0; }
+.route-item:last-child { padding-bottom: 0; }
+.route-dot { position: absolute; left: -8rpx; top: 6rpx; width: 14rpx; height: 14rpx; border-radius: 50%; background: #d9d9d9; }
+.route-dot.active { background: #775836; }
+.route-info { display: flex; flex-direction: column; gap: 4rpx; }
+.route-remark { font-size: 26rpx; color: #1C1B1B; }
+.route-time { font-size: 22rpx; color: #999; }
 </style>

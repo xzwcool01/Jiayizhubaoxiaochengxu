@@ -129,15 +129,25 @@ public class SfExpressService {
         return callSfApi("EXP_RECE_SEARCH_ROUTES", msgData);
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> previewWaybill(String waybillNo, String templateCode) throws Exception {
         if (!config.isEnabled()) throw new RuntimeException("顺丰未配置");
 
-        Map<String, Object> body = new java.util.HashMap<>();
-        body.put("waybillNo", waybillNo);
-        body.put("templateCode", templateCode);
-
-        String msgData = objectMapper.writeValueAsString(body);
-        return callSfApi("COM_RECE_CLOUD_PRINT_PARSEDDATA", msgData);
+        String msgData = objectMapper.writeValueAsString(Map.of(
+                "templateCode", templateCode,
+                "documents", List.of(Map.of(
+                        "waybillNo", waybillNo,
+                        "templateCode", templateCode,
+                        "clientCode", config.getClientCode()
+                ))
+        ));
+        Map<String, Object> result = callSfApi("COM_RECE_CLOUD_PRINT_PARSEDDATA", msgData);
+        // 从 documents[0] 中提取面单数据，展平返回
+        List<Map<String, Object>> docs = (List<Map<String, Object>>) result.get("documents");
+        if (docs != null && !docs.isEmpty()) {
+            return docs.get(0);
+        }
+        return result;
     }
 
     @SuppressWarnings("unchecked")

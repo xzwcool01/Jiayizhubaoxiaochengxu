@@ -334,31 +334,31 @@ onMounted(fetchData)
       </template>
     </el-dialog>
 
-    <el-dialog v-model="previewDialogVisible" title="顺丰面单预览" width="500px">
+        <el-dialog v-model="previewDialogVisible" title="顺丰面单预览" width="500px">
       <div v-loading="previewLoading">
         <div v-if="previewData" style="border:1px solid #e8e8e8;border-radius:8px;padding:20px;background:#fafafa">
           <div style="text-align:center;margin-bottom:16px">
             <canvas id="waybill-qrcode" style="display:inline-block"></canvas>
           </div>
           <div style="font-size:14px;font-weight:600;text-align:center;margin-bottom:16px">
-            {{ previewWaybillNo }}
+            {{ previewData._waybillNo || previewWaybillNo }}
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px">
             <div>
               <div style="color:#999;margin-bottom:2px">寄件人</div>
-              <div style="font-weight:500">{{ previewData.sourceName || getRouteLabel()?.sourceDeptCode || '-' }}</div>
-              <div style="color:#666">{{ previewData.sourceMobile || '' }}</div>
-              <div style="color:#999;font-size:12px">{{ [previewData.sourceCity || previewData.sourceCityCode, previewData.sourceCounty, previewData.sourceAddress].filter(Boolean).join(' ') }}</div>
+              <div style="font-weight:500">{{ previewData._sender?.name || '-' }}</div>
+              <div style="color:#666">{{ previewData._sender?.mobile || '' }}</div>
+              <div style="color:#999;font-size:12px">{{ [previewData._sender?.province, previewData._sender?.city, previewData._sender?.county, previewData._sender?.address].filter(Boolean).join(' ') }}</div>
             </div>
             <div>
               <div style="color:#999;margin-bottom:2px">收件人</div>
-              <div style="font-weight:500">{{ previewData.destName || '-' }}</div>
-              <div style="color:#666">{{ previewData.destMobile || '' }}</div>
-              <div style="color:#999;font-size:12px">{{ [previewData.destCity || previewData.destCityCode, previewData.destCounty, previewData.destAddress].filter(Boolean).join(' ') }}</div>
+              <div style="font-weight:500">{{ previewData._receiver?.name || '-' }}</div>
+              <div style="color:#666">{{ previewData._receiver?.mobile || '' }}</div>
+              <div style="color:#999;font-size:12px">{{ [previewData._receiver?.province, previewData._receiver?.city, previewData._receiver?.county, previewData._receiver?.address].filter(Boolean).join(' ') }}</div>
             </div>
           </div>
-          <div v-if="getRouteLabel() || previewData.proName" style="margin-top:12px;padding-top:12px;border-top:1px dashed #ddd;font-size:12px;color:#999;text-align:center">
-            产品类型：{{ getRouteLabel()?.proName || previewData.proName || '-' }}
+          <div v-if="getRouteLabel()?.proName || getRouteLabel()?.proCode" style="margin-top:12px;padding-top:12px;border-top:1px dashed #ddd;font-size:12px;color:#999;text-align:center">
+            产品类型：{{ getRouteLabel()?.proName || getRouteLabel()?.proCode || '-' }}
           </div>
         </div>
         <div v-else-if="!previewLoading" style="color:#999;text-align:center;padding:20px 0">暂无面单数据</div>

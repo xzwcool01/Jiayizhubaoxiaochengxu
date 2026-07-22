@@ -75,6 +75,10 @@ export function getDelivery(orderId: number) {
   return get<DeliveryVO>('/delivery/info', { orderId })
 }
 
+export function getDeliveryTrack(orderId: number) {
+  return get<any>('/delivery/track', { orderId })
+}
+
 export function receiveOrder(id: number) {
   return post<null>('/delivery/receive', { id, openid: getOpenid() })
 }

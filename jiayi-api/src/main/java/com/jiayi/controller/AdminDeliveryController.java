@@ -61,18 +61,12 @@ public class AdminDeliveryController {
                             .eq(OmsOrderDelivery::getOrderId, orderId));
             if (d == null || d.getTrackingNo() == null) return R.error("发货记录不存在");
 
-            // 优先调顺丰云打印解析 API 获取完整面单数据
-            try {
-                Map<String, Object> sfData = sfExpressService.previewWaybill(
-                        d.getTrackingNo(), "fm_150_standard_YAL1P7QG");
-                return R.ok(sfData);
-            } catch (Exception ignored) {
-                // 顺丰API失败时回退本地数据
-            }
-
+            // 优先返回本地存储的面单数据(含寄收件人信息)
             if (d.getWaybillData() != null && !d.getWaybillData().isBlank()) {
                 Map<String, Object> data = objectMapper.readValue(d.getWaybillData(),
                         new TypeReference<Map<String, Object>>() {});
+                // 确保前端能取到运单号
+                if (!data.containsKey("_waybillNo")) data.put("_waybillNo", d.getTrackingNo());
                 return R.ok(data);
             }
 

@@ -3,6 +3,7 @@ package com.jiayi.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jiayi.config.SfExpressConfig;
 import com.jiayi.dto.DeliveryVO;
 import com.jiayi.dto.ShipDTO;
 import com.jiayi.entity.OmsOrder;
@@ -17,8 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,15 +28,18 @@ public class DeliveryService {
     private final OmsOrderMapper orderMapper;
     private final OmsOrderItemMapper orderItemMapper;
     private final SfExpressService sfExpressService;
+    private final SfExpressConfig sfExpressConfig;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(DeliveryService.class);
 
     public DeliveryService(OmsOrderDeliveryMapper deliveryMapper, OmsOrderMapper orderMapper,
-                           OmsOrderItemMapper orderItemMapper, SfExpressService sfExpressService) {
+                           OmsOrderItemMapper orderItemMapper, SfExpressService sfExpressService,
+                           SfExpressConfig sfExpressConfig) {
         this.deliveryMapper = deliveryMapper;
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
         this.sfExpressService = sfExpressService;
+        this.sfExpressConfig = sfExpressConfig;
     }
 
     @Transactional
@@ -83,7 +86,25 @@ public class DeliveryService {
         delivery.setExpressCompany(expressCompany);
         delivery.setTrackingNo(trackingNo);
         if (sfResult != null && !sfResult.isEmpty()) {
-            delivery.setWaybillData(objectMapper.writeValueAsString(sfResult));
+            Map<String, Object> waybillExtra = new HashMap<>(sfResult);
+            waybillExtra.put("_sender", Map.of(
+                    "name", sfExpressConfig.getSenderName(),
+                    "mobile", sfExpressConfig.getSenderPhone(),
+                    "province", sfExpressConfig.getSenderProvince(),
+                    "city", sfExpressConfig.getSenderCity(),
+                    "county", sfExpressConfig.getSenderDistrict(),
+                    "address", sfExpressConfig.getSenderAddress()
+            ));
+            Map<String, Object> addrMap = parseAddressSnapshot(order.getAddressSnapshot());
+            waybillExtra.put("_receiver", Map.of(
+                    "name", addrMap.getOrDefault("name", ""),
+                    "mobile", addrMap.getOrDefault("phone", ""),
+                    "province", addrMap.getOrDefault("province", ""),
+                    "city", addrMap.getOrDefault("city", ""),
+                    "county", addrMap.getOrDefault("district", ""),
+                    "address", addrMap.getOrDefault("detail", "")
+            ));
+            delivery.setWaybillData(objectMapper.writeValueAsString(waybillExtra));
         }
         delivery.setStatus(0);
         delivery.setShippedAt(LocalDateTime.now());
