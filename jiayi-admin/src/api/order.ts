@@ -51,6 +51,6 @@ export function trackOrder(params: { trackingNo: string; phone?: string }) {
   return request.get<any, { code: number; data: any; message: string }>('/admin/delivery/track', { params })
 }
 
-export function previewWaybill(params: { waybillNo: string }) {
+export function previewWaybill(params: { orderId: number }) {
   return request.get<any, { code: number; data: any; message: string }>('/admin/delivery/preview-waybill', { params })
 }

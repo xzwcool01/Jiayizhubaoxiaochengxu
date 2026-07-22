@@ -252,3 +252,18 @@ CREATE TABLE IF NOT EXISTS ums_member_signin (
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uk_user_date (user_id, signin_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 发货表
+CREATE TABLE IF NOT EXISTS oms_order_delivery (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT NOT NULL,
+    express_company VARCHAR(50),
+    tracking_no VARCHAR(50),
+    waybill_data TEXT COMMENT '顺丰创建订单返回的原始数据(JSON)',
+    status TINYINT DEFAULT 0 COMMENT '0-已发货 1-已签收',
+    shipped_at DATETIME,
+    received_at DATETIME,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_order (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -82,6 +82,9 @@ public class DeliveryService {
         delivery.setOrderId(dto.getOrderId());
         delivery.setExpressCompany(expressCompany);
         delivery.setTrackingNo(trackingNo);
+        if (sfResult != null && !sfResult.isEmpty()) {
+            delivery.setWaybillData(objectMapper.writeValueAsString(sfResult));
+        }
         delivery.setStatus(0);
         delivery.setShippedAt(LocalDateTime.now());
         deliveryMapper.insert(delivery);

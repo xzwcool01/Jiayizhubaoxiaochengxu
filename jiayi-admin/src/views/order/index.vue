@@ -101,15 +101,12 @@ async function handleAutoShip() {
       shipDialogVisible.value = false
       fetchData()
       if (res.data) {
-        const list = res.data.waybillNoInfoList as Array<{ waybillNo: string }> | undefined
-        if (list?.length) {
-          previewWaybillNo.value = list[0].waybillNo
-          previewData.value = res.data
-          previewQrCode.value = ''
-          previewDialogVisible.value = true
-          await nextTick()
-          await renderQrCode()
-        }
+        previewWaybillNo.value = res.data.waybillNoInfoList?.[0]?.waybillNo || shipForm.trackingNo || ''
+        previewData.value = res.data
+        previewQrCode.value = ''
+        previewDialogVisible.value = true
+        await nextTick()
+        await renderQrCode()
       }
     } else {
       ElMessage.error(res.message || '自动生成失败')
@@ -159,10 +156,10 @@ async function openPreviewDialog(row: AdminOrderVO) {
   previewData.value = null
   previewQrCode.value = ''
   previewDialogVisible.value = true
-  if (!previewWaybillNo.value) return
+  if (!row.trackingNo) return
   previewLoading.value = true
   try {
-    const res = await previewWaybill({ waybillNo: previewWaybillNo.value })
+    const res = await previewWaybill({ orderId: row.id })
     if (res.code === 200) {
       previewData.value = res.data
       await nextTick()
@@ -180,7 +177,8 @@ async function openPreviewDialog(row: AdminOrderVO) {
 async function renderQrCode() {
   const canvas = document.getElementById('waybill-qrcode') as HTMLCanvasElement
   if (!canvas || !previewData.value) return
-  const codeStr = previewData.value.twoDimensionCode || previewWaybillNo.value
+  const routeLabel = previewData.value.routeLabelInfo?.[0]?.routeLabelData
+  const codeStr = routeLabel?.twoDimensionCode || previewData.value.twoDimensionCode || previewWaybillNo.value
   try {
     await QRCode.toCanvas(canvas, codeStr, { width: 180, margin: 1 })
   } catch {
@@ -188,9 +186,8 @@ async function renderQrCode() {
   }
 }
 
-function previewField(label: string, value?: string) {
-  if (!value) return null
-  return { label, value }
+function getRouteLabel() {
+  return previewData.value?.routeLabelInfo?.[0]?.routeLabelData
 }
 
 onMounted(fetchData)
@@ -349,19 +346,19 @@ onMounted(fetchData)
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px">
             <div>
               <div style="color:#999;margin-bottom:2px">寄件人</div>
-              <div style="font-weight:500">{{ previewData.sourceName || '-' }}</div>
+              <div style="font-weight:500">{{ previewData.sourceName || getRouteLabel()?.sourceDeptCode || '-' }}</div>
               <div style="color:#666">{{ previewData.sourceMobile || '' }}</div>
-              <div style="color:#999;font-size:12px">{{ [previewData.sourceCity, previewData.sourceCounty, previewData.sourceAddress].filter(Boolean).join(' ') }}</div>
+              <div style="color:#999;font-size:12px">{{ [previewData.sourceCity || previewData.sourceCityCode, previewData.sourceCounty, previewData.sourceAddress].filter(Boolean).join(' ') }}</div>
             </div>
             <div>
               <div style="color:#999;margin-bottom:2px">收件人</div>
               <div style="font-weight:500">{{ previewData.destName || '-' }}</div>
               <div style="color:#666">{{ previewData.destMobile || '' }}</div>
-              <div style="color:#999;font-size:12px">{{ [previewData.destCity, previewData.destCounty, previewData.destAddress].filter(Boolean).join(' ') }}</div>
+              <div style="color:#999;font-size:12px">{{ [previewData.destCity || previewData.destCityCode, previewData.destCounty, previewData.destAddress].filter(Boolean).join(' ') }}</div>
             </div>
           </div>
-          <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #ddd;font-size:12px;color:#999;text-align:center">
-            产品类型：{{ previewData.proName || '-' }}
+          <div v-if="getRouteLabel() || previewData.proName" style="margin-top:12px;padding-top:12px;border-top:1px dashed #ddd;font-size:12px;color:#999;text-align:center">
+            产品类型：{{ getRouteLabel()?.proName || previewData.proName || '-' }}
           </div>
         </div>
         <div v-else-if="!previewLoading" style="color:#999;text-align:center;padding:20px 0">暂无面单数据</div>

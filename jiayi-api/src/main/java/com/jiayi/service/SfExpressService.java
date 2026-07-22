@@ -129,13 +129,14 @@ public class SfExpressService {
         return callSfApi("EXP_RECE_SEARCH_ROUTES", msgData);
     }
 
-    public Map<String, Object> previewWaybill(String waybillNo) throws Exception {
+    public Map<String, Object> previewWaybill(String waybillNo, String templateCode) throws Exception {
         if (!config.isEnabled()) throw new RuntimeException("顺丰未配置");
 
-        String msgData = objectMapper.writeValueAsString(Map.of(
-                "waybillNo", waybillNo
-        ));
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("waybillNo", waybillNo);
+        body.put("templateCode", templateCode);
 
+        String msgData = objectMapper.writeValueAsString(body);
         return callSfApi("COM_RECE_CLOUD_PRINT_PARSEDDATA", msgData);
     }
 
