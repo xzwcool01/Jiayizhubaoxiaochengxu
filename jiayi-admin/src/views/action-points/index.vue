@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getActionPointsList, updateActionPoints, createActionPoints, type ActionPointsRule } from '@/api/actionPoints'
+import { getActionPointsList, updateActionPoints, type ActionPointsRule } from '@/api/actionPoints'
 
 const rules = ref<ActionPointsRule[]>([])
 const editVisible = ref(false)
-const addVisible = ref(false)
 const editing = ref<ActionPointsRule | null>(null)
-const adding = ref({ actionKey: '', actionName: '', points: 0, status: 1 })
 
 async function fetchData() {
   const res = await getActionPointsList()
@@ -31,31 +29,16 @@ async function handleSave() {
   fetchData()
 }
 
-function openAdd() {
-  adding.value = { actionKey: '', actionName: '', points: 0, status: 1 }
-  addVisible.value = true
-}
-
-async function handleAdd() {
-  if (!adding.value.actionKey || !adding.value.actionName) {
-    ElMessage.warning('请填写行为标识和名称')
-    return
-  }
-  await createActionPoints(adding.value)
-  ElMessage.success('新增成功')
-  addVisible.value = false
-  fetchData()
-}
-
 onMounted(fetchData)
 </script>
 
 <template>
   <div>
-    <div class="page-header"><h2>行为积分</h2><el-button type="primary" @click="openAdd">新增行为</el-button></div>
+    <div class="page-header"><h2>行为积分</h2></div>
+    <p style="color:#999;font-size:13px;margin-bottom:16px">如需添加新行为，联系开发人员</p>
     <el-card shadow="never">
       <el-alert type="info" show-icon :closable="false" style="margin-bottom:16px">
-        <template #title>配置用户行为可获得的积分数。禁用某项后，对应行为不再赠送积分。</template>
+        <template #title>配置用户行为可获得的积分数。「下单赠送」的数值代表百分比（如 10 即实付金额的 10%），其他行为代表固定积分数。禁用某项后对应行为不再赠送积分。</template>
       </el-alert>
       <el-table :data="rules" stripe style="width:100%">
         <el-table-column prop="id" label="编号" width="60" />
@@ -85,16 +68,6 @@ onMounted(fetchData)
         <el-form-item label="状态"><el-select v-model="editing.status"><el-option :value="1" label="启用" /><el-option :value="0" label="禁用" /></el-select></el-form-item>
       </el-form>
       <template #footer><el-button @click="editVisible = false">取消</el-button><el-button type="primary" @click="handleSave">保存</el-button></template>
-    </el-dialog>
-
-    <el-dialog v-model="addVisible" title="新增行为" width="500px">
-      <el-form label-width="120px">
-        <el-form-item label="行为标识"><el-input v-model="adding.actionKey" placeholder="英文标识如 share" /></el-form-item>
-        <el-form-item label="行为名称"><el-input v-model="adding.actionName" placeholder="如 分享商品" /></el-form-item>
-        <el-form-item label="获得积分"><el-input-number v-model="adding.points" :min="0" style="width:200px" /></el-form-item>
-        <el-form-item label="状态"><el-select v-model="adding.status"><el-option :value="1" label="启用" /><el-option :value="0" label="禁用" /></el-select></el-form-item>
-      </el-form>
-      <template #footer><el-button @click="addVisible = false">取消</el-button><el-button type="primary" @click="handleAdd">新增</el-button></template>
     </el-dialog>
   </div>
 </template>

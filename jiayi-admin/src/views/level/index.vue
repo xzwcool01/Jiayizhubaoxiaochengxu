@@ -7,7 +7,7 @@ const list = ref<UmsLevel[]>([])
 const editVisible = ref(false)
 const addVisible = ref(false)
 const editForm = ref<Partial<UmsLevel>>({})
-const addForm = ref({ name: '', minPoints: 0, maxPoints: 999999, levelOrder: 0, color: '#775836', perks: '', discountRate: 10 })
+const addForm = ref({ name: '', minPoints: 0, maxPoints: 999999, levelOrder: 0, color: '#775836', perks: '' })
 
 async function fetchData() {
   const res = await getLevelList()
@@ -95,7 +95,6 @@ onMounted(fetchData)
         <el-form-item label="排序"><el-input-number v-model="editForm.levelOrder" :min="1" /></el-form-item>
         <el-form-item label="积分下限"><el-input-number v-model="editForm.minPoints" :min="0" /></el-form-item>
         <el-form-item label="积分上限"><el-input-number v-model="editForm.maxPoints" :min="0" /></el-form-item>
-        <el-form-item label="折扣率"><el-input-number v-model="editForm.discountRate" :min="0" :max="10" :step="0.5" /><span style="margin-left:8px;color:#999">折</span></el-form-item>
         <el-form-item label="显示颜色"><el-input v-model="editForm.color" placeholder="#775836" /></el-form-item>
         <el-form-item label="权益列表">
           <el-input v-model="editForm.perks" type="textarea" :rows="3" placeholder='JSON数组，如 ["权益1","权益2"]' />
@@ -114,7 +113,6 @@ onMounted(fetchData)
         <el-form-item label="排序"><el-input-number v-model="addForm.levelOrder" :min="1" /></el-form-item>
         <el-form-item label="积分下限"><el-input-number v-model="addForm.minPoints" :min="0" /></el-form-item>
         <el-form-item label="积分上限"><el-input-number v-model="addForm.maxPoints" :min="0" /></el-form-item>
-        <el-form-item label="折扣率"><el-input-number v-model="addForm.discountRate" :min="0" :max="10" :step="0.5" /><span style="margin-left:8px;color:#999">折</span></el-form-item>
         <el-form-item label="显示颜色"><el-input v-model="addForm.color" placeholder="#775836" /></el-form-item>
         <el-form-item label="权益列表">
           <el-input v-model="addForm.perks" type="textarea" :rows="3" placeholder='JSON数组，如 ["权益1","权益2"]' />

@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { onLoad, onShareAppMessage } from '@dcloudio/uni-app'
 import MsIcon from '@/components/MsIcon.vue'
-import { getProduct, getSharePoster, getProductPageConfig, PmsProduct, ProductPageConfig } from '@/api/product'
+import { getProduct, getSharePoster, shareReward, getProductPageConfig, PmsProduct, ProductPageConfig } from '@/api/product'
 import { toggleFavorite, getFavoriteStatus } from '@/api/favorite'
 import { addToCart } from '@/api/cart'
 import AiWearCard from '@/components/AiWearCard.vue'
@@ -148,6 +148,7 @@ async function handleShare() {
     uni.hideLoading()
   }
   showPoster.value = true
+  shareReward(uni.getStorageSync('token') || '').catch(() => {})
 }
 
 function savePoster() {
@@ -240,7 +241,7 @@ onShareAppMessage(() => {
         <text class="sales-text">已售 {{ product.sales || 0 }}</text>
       </view>
       <!-- NEW: AI穿戴 + 抖音视频（价格下方、描述上方） -->
-      <AiWearCard v-if="pageConfig?.aiEnabled" />
+      <AiWearCard v-if="pageConfig?.aiEnabled" :productId="product?.id" :categoryId="product?.categoryId" />
       <VideoShowcase v-if="pageConfig?.videoEnabled" :cover="pageConfig?.videoCover || images[0] || ''" :videoUrl="pageConfig?.videoUrl || ''" />
       <!-- END NEW -->
       <view class="desc">

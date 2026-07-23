@@ -34,6 +34,16 @@ mybatis-plus:
 
 app:
   upload-dir: ./uploads
+  ai:
+    generator: bailian
+    siliconflow:
+      api-key: ""
+      model: black-forest-labs/FLUX.1-schnell
+      base-url: https://api.siliconflow.cn/v1
+    bailian:
+      api-key: "sk-9543f458be184831950f7206557971bd"
+      model: qwen-image-edit-plus
+      base-url: https://dashscope.aliyuncs.com
 
 springdoc:
   api-docs:

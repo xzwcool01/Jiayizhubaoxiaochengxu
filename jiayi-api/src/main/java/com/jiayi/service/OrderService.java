@@ -33,6 +33,8 @@ public class OrderService {
     private final CartService cartService;
     private final CouponService couponService;
     private final PointsService pointsService;
+    private final ActionPointsService actionPointsService;
+    private final MemberService memberService;
     private final OmsOrderDeliveryMapper deliveryMapper;
     private final SmsCouponProductMapper couponProductMapper;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -46,6 +48,7 @@ public class OrderService {
                         SmsUserCouponMapper userCouponMapper,
                         PmsProductMapper productMapper, UmsUserMapper userMapper,
                         CartService cartService, CouponService couponService, PointsService pointsService,
+                        ActionPointsService actionPointsService, MemberService memberService,
                         OmsOrderDeliveryMapper deliveryMapper,
                         SmsCouponProductMapper couponProductMapper) {
         this.orderMapper = orderMapper;
@@ -58,6 +61,8 @@ public class OrderService {
         this.cartService = cartService;
         this.couponService = couponService;
         this.pointsService = pointsService;
+        this.actionPointsService = actionPointsService;
+        this.memberService = memberService;
         this.deliveryMapper = deliveryMapper;
         this.couponProductMapper = couponProductMapper;
     }
@@ -265,6 +270,20 @@ public class OrderService {
         order.setPaymentMethod(1);
         order.setPaidAt(LocalDateTime.now());
         orderMapper.updateById(order);
+
+        int rate = actionPointsService.getPoints("order");
+        if (rate > 0 && order.getPayAmount() != null) {
+            int earned = order.getPayAmount().multiply(BigDecimal.valueOf(rate).divide(BigDecimal.valueOf(100)))
+                    .setScale(0, java.math.RoundingMode.HALF_UP).intValue();
+            if (earned > 0) {
+                UmsUser user = userMapper.selectById(order.getUserId());
+                if (user != null) {
+                    user.setPoints((user.getPoints() == null ? 0 : user.getPoints()) + earned);
+                    userMapper.updateById(user);
+                    memberService.addPointsLog(user.getId(), "order", "下单赠送", earned);
+                }
+            }
+        }
     }
 
     @Transactional

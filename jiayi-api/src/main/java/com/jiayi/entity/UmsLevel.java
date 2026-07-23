@@ -18,6 +18,7 @@ public class UmsLevel {
     private String color;
     private String perks;
     private Integer levelOrder;
+    private Integer aiWearLimit;
     @TableLogic
     private Integer deleted;
     @TableField(fill = FieldFill.INSERT)

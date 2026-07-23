@@ -17,6 +17,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'user', name: 'User', component: () => import('@/views/user/index.vue'), meta: { title: '会员管理' } },
       { path: 'level', name: 'Level', component: () => import('@/views/level/index.vue'), meta: { title: '等级配置' } },
       { path: 'content', name: 'Content', component: () => import('@/views/content/index.vue'), meta: { title: '内容管理' } },
+      { path: 'ai-wear-prompt', name: 'AiWearPrompt', component: () => import('@/views/ai-wear-prompt/index.vue'), meta: { title: 'AI试戴配置' } },
       { path: 'settings', name: 'Settings', component: () => import('@/views/settings/index.vue'), meta: { title: '系统设置' } },
       { path: 'favorite', name: 'Favorite', component: () => import('@/views/favorite/index.vue'), meta: { title: '收藏管理' } },
       { path: 'cart', name: 'Cart', component: () => import('@/views/cart/index.vue'), meta: { title: '购物车管理' } },

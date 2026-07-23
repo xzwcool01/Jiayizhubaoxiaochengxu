@@ -216,7 +216,7 @@ onShow(() => {
 })
 
 const benefits = [
-  { icon: 'auto_awesome', label: 'AI试戴上限', desc: '每日限额50次' },
+  { icon: 'auto_awesome', label: 'AI试戴上限', desc: '每日限额10次' },
   { icon: 'cake', label: '生日礼遇', desc: '专享神秘珠宝礼' },
   { icon: 'local_shipping', label: '全场包邮', desc: '顺丰尊享配送' },
   { icon: 'support_agent', label: '专属客服', desc: '24/7私人顾问' }

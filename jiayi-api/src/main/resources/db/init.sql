@@ -296,10 +296,39 @@ CREATE TABLE IF NOT EXISTS ums_points_log (
 INSERT IGNORE INTO ums_action_points (action_key, action_name, points) VALUES
 ('sign_in', '每日签到', 10),
 ('review', '商品评价', 20),
-('register', '注册赠送', 1000);
+('register', '注册赠送', 1000),
+('order', '下单赠送', 10),
+('share', '分享商品', 20);
 
 ALTER TABLE oms_order ADD COLUMN reviewed TINYINT DEFAULT 0 COMMENT '0未评价1已评价';
 ALTER TABLE ums_level ADD COLUMN discount_rate DECIMAL(5,2) DEFAULT 10.00 COMMENT '折扣率';
 ALTER TABLE ums_level ADD COLUMN color VARCHAR(20) DEFAULT '#775836' COMMENT '显示颜色';
 ALTER TABLE ums_level ADD COLUMN perks TEXT COMMENT '权益列表JSON数组';
 ALTER TABLE ums_level ADD COLUMN icon VARCHAR(500) COMMENT '图标';
+ALTER TABLE ums_level ADD COLUMN ai_wear_limit INT DEFAULT 10 COMMENT 'AI试戴每日限额';
+
+-- AI穿戴记录表
+CREATE TABLE IF NOT EXISTS ai_wear_record (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    product_id BIGINT NOT NULL COMMENT '商品ID',
+    user_photo VARCHAR(500) NOT NULL COMMENT '用户照片URL',
+    result_url VARCHAR(500) COMMENT 'AI生成结果URL',
+    style VARCHAR(50) COMMENT '选择的风格',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_date (user_id, create_time),
+    INDEX idx_user_product (user_id, product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- AI穿戴提示词模板表
+CREATE TABLE IF NOT EXISTS ai_wear_prompt (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    category_id BIGINT NOT NULL COMMENT '商品分类ID(关联pms_category)',
+    prompt_template TEXT NOT NULL COMMENT '提示词模板，{name}商品名 {desc}描述',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_category (category_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE ai_wear_record ADD COLUMN category_id BIGINT COMMENT '商品分类ID' AFTER product_id;
+ALTER TABLE ai_wear_record ADD COLUMN show_on_discovery TINYINT DEFAULT 0 COMMENT '是否在发现页展示' AFTER style;

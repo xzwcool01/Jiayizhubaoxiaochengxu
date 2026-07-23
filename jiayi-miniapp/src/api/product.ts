@@ -1,4 +1,4 @@
-import { get } from './request'
+import { get, post } from './request'
 
 export interface PmsProduct {
   id: number
@@ -52,6 +52,10 @@ export function getCategories() {
 
 export function getSharePoster(id: number) {
   return get<string>('/share/poster/' + id)
+}
+
+export function shareReward(openid: string) {
+  return post<void>('/share/reward', { openid })
 }
 
 export interface ProductPageConfig {
