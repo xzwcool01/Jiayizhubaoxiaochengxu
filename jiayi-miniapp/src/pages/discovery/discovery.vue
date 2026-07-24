@@ -1,44 +1,73 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import NavBar from '@/components/NavBar.vue'
 import MsIcon from '@/components/MsIcon.vue'
-import { getAiWearShowcase } from '@/api/ai-wear'
+import { getAiWearShowcase, type AiWearShowcaseItem } from '@/api/ai-wear'
+import { getGuideArticles, type GuideArticleItem } from '@/api/guide-article'
+import { getExpertPosts, type ExpertPostItem } from '@/api/expert-post'
 
 const activeTab = ref(0)
-const tabs = ['AI穿搭秀', '珠宝指南', '达人晒单']
+const tabs = ['AI试戴秀', '珠宝指南', '达人晒单']
 
-const aiCards = ref([
-  { title: '祖母绿晨间意蕴', tag: 'AI生成 · 职场风', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCH9R9MvotXXiEf_Je_nh89GQuV5C61W_umVCiQk_jVNWWIF7PLKj2YwMbqFZtta6Q8VEqihKrcbXUgrMS0uUy5asCIxFElPLhO2iy0mtQerpo3O0x7FgUPFAe1WfBHNr_TJKssoSxlEmuZfEvCnj-ZvGrRUm3Tbz1FT7q8dUGMEC2V1OVY0TfZW1I81Lv_sA5bOTXWo_yB8X-QFdUeorRxXm-5r-35DeUR9U4I-pm-Fo0OyKd3le9_bQ', ratio: '3/4' },
-  { title: '晨曦系列：永恒之光', tag: 'AI生成 · 简约奢华', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBJVATCKa2ATbbOBUtztBUts1mby0Iq8e_VCjOoc2L283MdrQfOJzIc3J2sHLsOpJ2I5V-6zEzzMZmvvhSNA8I2eEvSFFucnOYUirHHUc5Sjc9qHUyBo8xG0HJKA7hpSdC_1DtNDHy76ZM1R3sNFcE3DluxOKZuCXzlC2Bc5JjsX8AB5h9V4Ryi8bXBK90Ya3-ruubnyEeZvcexFF-2lVYSCzlNINwz-FaabKKsN8NZKo02aP-zMsEBYw', ratio: '1/1' },
-  { title: '黑金盛宴：先锋设计', tag: 'AI生成 · 晚宴风', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCjD27bnXvTtiSk2wvhACxVRP-gRZ-UXAl-UQQUbvZu4wjniL8gzc96SrfgwQqZ9tVShxC8ZobbEgqyfhx7RccSaGU3P4Nt3QizUfwOtdNBGcj3DTeY-mxdEnBEEhafNSXnKMijq0Ic4Do2kKqYVAc8GgXdNHDj02DNU2_4oLn3b-9EhkmcecAGG0FQPnabRcQdXVxbrSMhUgsfCu4N2zaqeZ-ZX8jyq6IuYqiFkV2fyXLtXw7rOCXmhA', ratio: '4/5' },
-  { title: '温润珍珠：暖冬序曲', tag: 'AI生成 · 复古经典', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA2MCnU52LuDSNXX3-XDZtVzrQ6cy3-hmZM-lp6ocAd4r0hU0StUQB-bT4s3zSxp0zDR_xiW8TxLSzaL_dIHZ9YjHqX9C6U7ecKN7iGN1NOa5lejF3Dh5LcpUjU5SG_lFKjAJ73pJp7M6yErXNv_-Qdt1XhamQYEOtXACJVVgwdba4w2ZP5nMFg-jWUir4nBBe741VhyKTmNB57x6crApkJdp0JwmfN0JdnJPnb9fvpsvT8QszjxP1MRA', ratio: '3/4' }
-])
+const guides = ref<GuideArticleItem[]>([])
+const posts = ref<ExpertPostItem[]>([])
 
-const guides = [
-  { title: '如何鉴别高品质红宝石：Jiayi 专业指南', desc: '从产地到净度，五个维度带您领略这种被称为"爱情之石"的珍贵红宝石。我们的首席专家为您揭秘收藏级的奥秘...', views: '12.8k', date: '2024.11.20', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCwi8mQGubh5im5ZNTN-U4-lvtPXoTW19JkofouQa_xnIQjUCzD3OKyw0QIJK8FLd9Xic98Xhvw-9H0U_EueJQAR-Tm-OwpFfR3wXvS5qzmXOjbZ_R3-3hkTgUVQvj8aNjNGi0RtIXOtLr9FOR5foNoIsqJK8tGSZmLxQgSZj47IPLvUxqkre9AqPvB8wG8vCW5jQlnSm6iEQJYbl5xoDCm2RqVvzTgHTlnnchLxlP05DakdviIgJoNAA', isHero: true },
-  { title: '匠心之道：从手稿到成品的华丽蜕变', desc: '嘉艺珠宝每件作品背后都要经过超过300小时的纯手工打磨与精雕细琢。', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDsVi1HtUJHPu-hpeG_knlSHD-LDpZkm0zISPm1wmmuyVHTswadYx4-nisiz88vX1y6lwJ_CCbAvATphYP1s2TY53A0W42ZEhoH6BfrUppGkTL8ZnctM2fclyD3bMWCa7DAVAURXzw3Cpps3PAGNEF78I1UkPkprdgbTbLay2k-KGioutxmLJcqGS8phR5MAmGJftuvl81nBklDdK8NHw2dv3LkNVKpRfwJcdt72iq_BXsDbkj8uA6JhQ', isHero: false },
-  { title: '日常保养：让您的瑰宝永远闪耀如新', desc: '掌握正确的清洁与存放方法，让珍贵瞬间跨越时光长河。', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCG_jsnbIkoiurU0oHxWiVYAaUIs420wWN01xJIsRmyIt9cBB8KDktMgOPpSvMMmVTNaqXOcbW45H2SfuoTPZNdG6d_XBXeOjjsFj6skcA3g0pRh29XTjXe78xccd7CZwLJCmamzneNns4XP273enAUBCatqd9S41RA5_3NJs3sZ1sLGxkhIu8s2GxOXRy7B0DtS96uAC0ROfooBp9LBAhhO0duBT0F7kTVbnOx8Q-N_3SOqhBILyOgJA', isHero: false }
-]
+const showcaseList = ref<AiWearShowcaseItem[]>([])
 
-const posts = [
-  { user: '@Elena.C', text: '收到纪念日礼物啦！蓝宝石的光泽在阳光下太迷人了✨', likes: '1.2k', tag: '#嘉艺瞬间', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuATW-QZc0MbQPQrdaGHEH2sQ6FnoUD0hzXNiGpJyUbnT3BTASXHJ_RxYX0L5D0S4oW1xu6y-hJMW6E0lDFWpkIfHgpzJNuAaOIZfp_YktMcKHt_VIOI3xyYLDkyAgSgIFKVujLEd7UKJi5zJd-OSxeoIiZj_ecuvdL8DAHOnT93nWx2Z5THjQZv7l-TSOlzUSvFQjUkqAXk8Eda4fpBIcIhS4wKGnmcpAS5x4SKPuSa4M_cxE9Cf0gyVw' },
-  { user: '@Mr.J', text: '极简而不凡，这就是我想要的风格。', likes: '856', tag: '#穿搭日常', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDUsUE6GOhYTCNOFm4dzK5r5xe1dnBGI6j6h6J9za3ypcoSEgqMPNaNOZC9BuBEa2SoLxVIYGg2dGygkKO95xtcrFiZlekQ8jebRHZCqJOYtWQk_FQ7B5YkyLwT5mW3D6L8Wf2ISNWp7xunfR_ysUCWUvIlMqoV-KhIRh7xhu5NjHG8SOCkiuL40f0j31ga2MBsM_R5oBW8_vUiMV3NfCrGdzZZGj-D9n7r5i75Ge1M-gS5-32RxezNLg' }
-]
+function toFullUrl(url: string) {
+  if (!url) return ''
+  return url.startsWith('http') ? url : 'http://localhost:8080' + url
+}
 
-const showcaseList = ref<any[]>([])
-
-onMounted(async () => {
+async function loadShowcase() {
   try {
     const res = await getAiWearShowcase()
     if (res.code === 200 && res.data) {
-      showcaseList.value = res.data.map((r: any) => ({
-        title: r.productName || 'AI 试戴',
-        tag: 'AI生成',
-        img: r.resultUrl?.startsWith('http') ? r.resultUrl : 'http://localhost:8080' + r.resultUrl,
-        ratio: '3/4'
-      }))
+      showcaseList.value = res.data.map((r) => ({
+        ...r,
+        imageUrl: toFullUrl(r.imageUrl)
+      })) as any
     }
   } catch {}
+}
+
+async function loadGuides() {
+  try {
+    const res = await getGuideArticles()
+    if (res.code === 200 && res.data) {
+      guides.value = res.data.map((g) => ({
+        ...g,
+        coverImage: toFullUrl(g.coverImage)
+      })) as any
+    }
+  } catch {}
+}
+
+async function loadPosts() {
+  try {
+    const res = await getExpertPosts()
+    if (res.code === 200 && res.data) {
+      posts.value = res.data.map((p) => ({
+        ...p,
+        images: p.images?.map((img: string) => toFullUrl(img))
+      })) as any
+    }
+  } catch {}
+}
+
+function onGuideTap(id: number) {
+  uni.navigateTo({ url: '/pages/discovery/article-detail?id=' + id })
+}
+
+function onPostTap(id: number) {
+  uni.navigateTo({ url: '/pages/discovery/expert-detail?id=' + id })
+}
+
+onShow(() => {
+  loadShowcase()
+  loadGuides()
+  loadPosts()
 })
 
 const tabIndicatorStyle = computed(() => {
@@ -46,15 +75,13 @@ const tabIndicatorStyle = computed(() => {
   return { left: positions[activeTab.value], width: '33.33%' }
 })
 
-const imgHeight = (ratio: string) => {
-  if (ratio === '3/4') return '480rpx'
-  if (ratio === '1/1') return '340rpx'
-  if (ratio === '4/5') return '400rpx'
-  return '340rpx'
+function switchTab(i: number) {
+  activeTab.value = i
+  if (i === 2) loadPosts()
 }
-
-function switchTab(i: number) { activeTab.value = i }
-function goAI() { uni.navigateTo({ url: '/pages/ai-wear/index' }) }
+function onPreviewImage(url: string) {
+  if (url) uni.previewImage({ urls: [url] })
+}
 </script>
 
 <template>
@@ -71,43 +98,27 @@ function goAI() { uni.navigateTo({ url: '/pages/ai-wear/index' }) }
     </view>
 
     <scroll-view class="tab-content" scroll-y :show-scrollbar="false" v-show="activeTab === 0">
-      <view class="ai-header">
-        <view class="ai-header-left">
-          <MsIcon name="auto_awesome" size="28rpx" color="#775836" />
-          <text class="ai-header-title">AI 灵感造型</text>
-        </view>
-        <button class="ai-header-btn" @tap="goAI">
-          <text>生成我的搭配</text>
-          <MsIcon name="star" size="18rpx" color="#775836" />
-        </button>
-      </view>
-
-      <view class="waterfall">
-        <view v-for="(card, i) in aiCards" :key="i" class="waterfall-item">
-          <view class="wf-card">
-            <view class="wf-img-wrap">
-              <image class="wf-img" :style="{ height: imgHeight(card.ratio) }" :src="card.img" mode="aspectFill" />
-            </view>
-            <view class="wf-info">
-              <text class="wf-title">{{ card.title }}</text>
-              <text class="wf-tag">{{ card.tag }}</text>
-            </view>
-            <view class="wf-like">
-              <MsIcon name="favorite" size="24rpx" color="#775836" />
-            </view>
+      <view class="tab-inner">
+        <view class="ai-header">
+          <view class="ai-header-left">
+            <MsIcon name="auto_awesome" size="28rpx" color="#775836" />
+            <text class="ai-header-title">AI 灵感造型</text>
           </view>
+        <view class="ai-header-btn">
+          <text>生成我的搭配</text>
+          <MsIcon name="auto_awesome" size="26rpx" color="#775836" />
         </view>
-      </view>
-
-      <view v-if="showcaseList.length" class="waterfall" style="margin-top:32rpx">
-        <view v-for="(card, i) in showcaseList" :key="'s'+i" class="waterfall-item">
-          <view class="wf-card">
-            <view class="wf-img-wrap">
-              <image class="wf-img" :style="{ height: imgHeight(card.ratio) }" :src="card.img" mode="aspectFill" />
-            </view>
-            <view class="wf-info">
-              <text class="wf-title">{{ card.title }}</text>
-              <text class="wf-tag">{{ card.tag }}</text>
+        </view>
+        <view v-if="showcaseList.length" class="waterfall">
+          <view v-for="(card, i) in showcaseList" :key="'s'+i" class="waterfall-item">
+            <view class="wf-card">
+              <view class="wf-img-wrap">
+                <image class="wf-img" style="height:440rpx" :src="card.imageUrl" mode="aspectFill" @tap="onPreviewImage(card.imageUrl)" />
+              </view>
+              <view class="wf-info">
+                <text class="wf-title">{{ card.title || 'AI 试戴' }}</text>
+                <text class="wf-tag">{{ card.nickname ? card.nickname + ' · ' : '' }}{{ card.tag }}</text>
+              </view>
             </view>
           </view>
         </view>
@@ -115,43 +126,50 @@ function goAI() { uni.navigateTo({ url: '/pages/ai-wear/index' }) }
     </scroll-view>
 
     <scroll-view class="tab-content" scroll-y :show-scrollbar="false" v-show="activeTab === 1">
-      <view v-for="(g, i) in guides" :key="i" class="guide-card">
-        <view class="guide-img-wrap" :class="g.isHero ? 'guide-img-hero-wrap' : 'guide-img-thumb-wrap'">
-          <image class="guide-img" :src="g.img" mode="aspectFill" />
-          <view v-if="g.isHero" class="guide-overlay" />
-          <view v-if="g.isHero" class="guide-tag">深度专题</view>
-        </view>
-        <view :class="g.isHero ? 'guide-info-hero' : 'guide-info-thumb'">
-          <text class="guide-title">{{ g.title }}</text>
-          <text class="guide-desc">{{ g.desc }}</text>
-          <view v-if="g.isHero" class="guide-stats">
-            <text class="guide-stat">visibility {{ g.views }}</text>
-            <text class="guide-stat">calendar_month {{ g.date }}</text>
+      <view class="tab-inner">
+        <view v-for="(g, i) in guides" :key="i" :class="['guide-card', g.isHero ? 'guide-card-hero' : 'guide-card-thumb']" @tap="onGuideTap(g.id)">
+          <view class="guide-img-wrap" :class="g.isHero ? 'guide-img-hero-wrap' : 'guide-img-thumb-wrap'">
+            <image class="guide-img" :src="g.coverImage" mode="aspectFill" />
+            <view v-if="g.isHero" class="guide-overlay" />
+            <view v-if="g.isHero" class="guide-tag">深度专题</view>
           </view>
-          <button v-if="!g.isHero" class="guide-readmore">
-            <text>阅读更多</text>
-            <MsIcon name="chevron_right" size="14rpx" color="#775836" />
-          </button>
+          <view v-if="g.isHero" class="guide-info-hero">
+            <text class="guide-title-hero">{{ g.title }}</text>
+            <text class="guide-desc-hero">{{ g.summary }}</text>
+            <view class="guide-stats">
+              <text class="guide-stat">{{ g.views }} 阅读</text>
+              <text class="guide-stat">{{ g.publishDate }}</text>
+            </view>
+          </view>
+          <view v-if="!g.isHero" class="guide-info-thumb-text">
+            <text class="guide-title-thumb">{{ g.title }}</text>
+            <text class="guide-desc-thumb">{{ g.summary }}</text>
+            <view class="guide-readmore">
+              <text>阅读更多</text>
+              <MsIcon name="chevron_right" size="14rpx" color="#775836" />
+            </view>
+          </view>
         </view>
       </view>
     </scroll-view>
 
     <scroll-view class="tab-content" scroll-y :show-scrollbar="false" v-show="activeTab === 2">
       <view class="post-grid">
-        <view v-for="(p, i) in posts" :key="i" class="post-card">
-          <image class="post-img" :src="p.img" mode="aspectFill" />
+        <view v-for="(p, i) in posts" :key="i" class="post-card" @tap="onPostTap(p.id)">
+          <image class="post-img" :src="p.images?.[0] || ''" mode="aspectFill" />
           <view class="post-info">
             <view class="post-user">
-              <view class="post-avatar" />
-              <text class="post-name">{{ p.user }}</text>
+              <image v-if="p.avatar" class="post-avatar-img" :src="p.avatar" mode="aspectFill" />
+              <view v-else class="post-avatar" />
+              <text class="post-name">@{{ p.nickname }}</text>
             </view>
-            <text class="post-text">{{ p.text }}</text>
+            <text class="post-text">{{ p.content }}</text>
             <view class="post-actions">
               <view class="post-likes">
                 <MsIcon name="favorite" size="14rpx" color="#605E5A" />
-                <text>{{ p.likes }}</text>
+                <text>{{ p.expertLikes }}</text>
               </view>
-              <text class="post-tag">{{ p.tag }}</text>
+              <text class="post-tag">{{ p.expertTag || '达人晒单' }}</text>
             </view>
           </view>
         </view>
@@ -163,10 +181,10 @@ function goAI() { uni.navigateTo({ url: '/pages/ai-wear/index' }) }
 </template>
 
 <style scoped>
-.page { background-color: #FAFAF8; min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 160rpx; box-sizing: border-box; }
+.page { background-color: #FAFAF8; min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 160rpx; padding-top: calc(var(--status-bar-height) + 16rpx); box-sizing: border-box; }
 
 /* Top Bar */
-.top-bar { display: flex; align-items: center; justify-content: center; height: 112rpx; background: rgba(252,249,248,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 50; }
+.top-bar { display: flex; align-items: center; justify-content: flex-start; height: 112rpx; padding-left: 48rpx; background: rgba(252,249,248,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 50; }
 .top-title { font-size: 48rpx; color: #775836; font-weight: 600; font-family: 'Noto Serif SC', serif; letter-spacing: 0.05em; }
 
 /* Tabs */
@@ -177,18 +195,19 @@ function goAI() { uni.navigateTo({ url: '/pages/ai-wear/index' }) }
 .tab-indicator { position: absolute; bottom: 0; height: 4rpx; background-color: #775836; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 2rpx; }
 
 /* Tab Content */
-.tab-content { flex: 1; padding: 32rpx; }
+.tab-content { flex: 1; }
+.tab-inner { padding: 32rpx 24rpx; width: 100%; box-sizing: border-box; }
 
 /* AI Header */
 .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32rpx; }
 .ai-header-left { display: flex; align-items: center; gap: 8rpx; }
 .ai-header-title { font-size: 36rpx; font-weight: 600; color: #775836; font-family: 'Noto Serif SC', serif; }
-.ai-header-btn { display: flex; align-items: center; gap: 8rpx; font-size: 22rpx; color: #775836; background: rgba(200,162,122,0.15); padding: 12rpx 24rpx; border-radius: 40rpx; border: none; line-height: 1; }
+.ai-header-btn { display: flex; align-items: center; gap: 8rpx; font-size: 24rpx; color: #775836; background: rgba(200,162,122,0.15); padding: 14rpx 28rpx; border-radius: 40rpx; border: none; line-height: 1; flex-shrink: 0; }
 .ai-header-btn:active { transform: scale(0.95); }
 
 /* Waterfall */
-.waterfall { display: flex; flex-wrap: wrap; gap: 24rpx; }
-.waterfall-item { width: calc(50% - 12rpx); }
+.waterfall { display: flex; flex-wrap: wrap; justify-content: space-between; }
+.waterfall-item { width: calc(50% - 12rpx); margin-bottom: 24rpx; box-sizing: border-box; }
 .wf-card { background: #fff; border-radius: 20rpx; overflow: hidden; box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); position: relative; }
 .wf-img-wrap { overflow: hidden; }
 .wf-img { width: 100%; display: block; transition: transform 0.5s; }
@@ -196,32 +215,35 @@ function goAI() { uni.navigateTo({ url: '/pages/ai-wear/index' }) }
 .wf-info { padding: 16rpx; }
 .wf-title { font-size: 24rpx; color: #1C1B1B; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
 .wf-tag { font-size: 20rpx; color: #605E5A; display: block; margin-top: 4rpx; }
-.wf-like { position: absolute; top: 12rpx; right: 12rpx; width: 52rpx; height: 52rpx; border-radius: 50%; background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; }
 
 /* Guide Tab */
-.guide-card { margin-bottom: 40rpx; }
-.guide-img-wrap { border-radius: 20rpx; overflow: hidden; position: relative; }
+.guide-card-hero { margin-bottom: 48rpx; }
+.guide-card-thumb { display: flex; flex-direction: row; gap: 24rpx; margin-bottom: 40rpx; width: 100%; }
+.guide-img-wrap { border-radius: 20rpx; overflow: hidden; position: relative; flex-shrink: 0; }
 .guide-img-hero-wrap { width: 100%; height: 340rpx; }
 .guide-img-thumb-wrap { width: 240rpx; height: 240rpx; flex-shrink: 0; }
-.guide-img { width: 100%; height: 100%; }
+.guide-img { width: 100%; height: 100%; display: block; }
 .guide-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.35), transparent); }
 .guide-tag { position: absolute; top: 24rpx; left: 24rpx; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); padding: 8rpx 24rpx; border-radius: 40rpx; font-size: 20rpx; color: #775836; font-weight: 700; }
-.guide-info-hero { margin-top: 16rpx; }
-.guide-info-thumb { display: flex; flex-direction: column; justify-content: center; }
-.guide-title { font-size: 28rpx; font-weight: 600; color: #1C1B1B; display: block; }
-.guide-desc { font-size: 22rpx; color: #605E5A; display: block; margin-top: 8rpx; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.guide-stats { display: flex; gap: 32rpx; margin-top: 16rpx; }
-.guide-stat { font-size: 20rpx; color: #605E5A; display: flex; align-items: center; gap: 4rpx; }
-.guide-readmore { display: flex; align-items: center; gap: 4rpx; font-size: 22rpx; color: #775836; font-weight: 700; margin-top: 8rpx; padding: 0; background: none; border: none; line-height: 1; }
+.guide-info-hero { margin-top: 20rpx; }
+.guide-title-hero { font-size: 28rpx; font-weight: 700; color: #1C1B1B; line-height: 1.5; display: block; }
+.guide-desc-hero { font-size: 24rpx; color: #605E5A; line-height: 1.6; margin-top: 12rpx; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.guide-stats { display: flex; gap: 32rpx; margin-top: 20rpx; }
+.guide-stat { font-size: 22rpx; color: #7A7A7A; }
+.guide-info-thumb-text { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.guide-title-thumb { font-size: 26rpx; font-weight: 700; color: #1C1B1B; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+.guide-desc-thumb { font-size: 22rpx; color: #605E5A; line-height: 1.5; margin-top: 8rpx; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+.guide-readmore { display: flex; align-items: center; gap: 4rpx; font-size: 22rpx; color: #775836; font-weight: 700; margin-top: 12rpx; flex-shrink: 0; }
 .guide-readmore:active { opacity: 0.7; }
 
 /* Post Grid */
-.post-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24rpx; }
+.post-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24rpx; padding: 0 24rpx; box-sizing: border-box; }
 .post-card { background: #fff; border-radius: 20rpx; overflow: hidden; box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); }
 .post-img { width: 100%; height: 340rpx; display: block; }
 .post-info { padding: 16rpx; }
 .post-user { display: flex; align-items: center; gap: 8rpx; margin-bottom: 8rpx; }
-.post-avatar { width: 40rpx; height: 40rpx; border-radius: 50%; background: #E6E2DD; }
+.post-avatar { width: 40rpx; height: 40rpx; border-radius: 50%; background: #E6E2DD; flex-shrink: 0; }
+.post-avatar-img { width: 40rpx; height: 40rpx; border-radius: 50%; flex-shrink: 0; }
 .post-name { font-size: 20rpx; font-weight: 700; color: #1C1B1B; }
 .post-text { font-size: 22rpx; color: #1C1B1B; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .post-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12rpx; }

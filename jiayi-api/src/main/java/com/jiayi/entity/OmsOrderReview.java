@@ -17,6 +17,12 @@ public class OmsOrderReview {
     private String images;
     private Integer isAnonymous;
     private Integer isTop;
+    private Integer showOnExpert;
+    private Integer expertSortOrder;
+    private String expertTag;
+    private Integer expertLikes;
+    private Integer isManual;
+    private String expertNickname;
     private Integer status;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;

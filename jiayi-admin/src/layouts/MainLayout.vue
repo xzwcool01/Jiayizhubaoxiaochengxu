@@ -14,6 +14,8 @@ const menuItems = [
   { path: '/level', icon: 'Coin', label: '等级配置' },
   { path: '/content', icon: 'EditPen', label: '内容管理' },
   { path: '/ai-wear-prompt', icon: 'Coin', label: 'AI试戴配置' },
+  { path: '/ai-wear-showcase', icon: 'PictureFilled',   label: 'AI试戴展示' },
+  { path: '/guide-article',    icon: 'Document',        label: '珠宝指南' },
   { path: '/settings', icon: 'Setting', label: '系统设置' },
   { path: '/favorite', icon: 'Star', label: '收藏管理' },
   { path: '/cart', icon: 'ShoppingCart', label: '购物车管理' },

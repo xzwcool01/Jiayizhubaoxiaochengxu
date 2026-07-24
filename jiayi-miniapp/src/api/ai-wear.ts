@@ -57,6 +57,17 @@ export function getAiWearRecords(productId: number) {
   return get<AiWearRecord[]>('/ai-wear/list', { productId, openid: uni.getStorageSync('token') || '' })
 }
 
+export interface AiWearShowcaseItem {
+  id: number
+  imageUrl: string
+  title: string
+  tag: string
+  userId: number | null
+  nickname: string
+  sortOrder: number
+  createTime: string
+}
+
 export function getAiWearShowcase() {
-  return get<AiWearRecord[]>('/ai-wear/showcase')
+  return get<AiWearShowcaseItem[]>('/ai-wear/showcase')
 }

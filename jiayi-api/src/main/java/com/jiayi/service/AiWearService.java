@@ -2,10 +2,12 @@ package com.jiayi.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.jiayi.entity.AiWearRecord;
+import com.jiayi.entity.AiWearShowcase;
 import com.jiayi.entity.PmsProduct;
 import com.jiayi.entity.UmsLevel;
 import com.jiayi.entity.UmsUser;
 import com.jiayi.mapper.AiWearRecordMapper;
+import com.jiayi.mapper.AiWearShowcaseMapper;
 import com.jiayi.mapper.PmsProductMapper;
 import com.jiayi.mapper.UmsLevelMapper;
 import com.jiayi.mapper.UmsUserMapper;
@@ -31,6 +33,7 @@ public class AiWearService {
     private static final int DEFAULT_DAILY_LIMIT = 10;
 
     private final AiWearRecordMapper recordMapper;
+    private final AiWearShowcaseMapper showcaseMapper;
     private final UmsUserMapper userMapper;
     private final UmsLevelMapper levelMapper;
     private final PmsProductMapper productMapper;
@@ -38,12 +41,14 @@ public class AiWearService {
     private final AiImageGenerator imageGenerator;
     private final String uploadDir;
 
-    public AiWearService(AiWearRecordMapper recordMapper, UmsUserMapper userMapper,
+    public AiWearService(AiWearRecordMapper recordMapper, AiWearShowcaseMapper showcaseMapper,
+                         UmsUserMapper userMapper,
                          UmsLevelMapper levelMapper, PmsProductMapper productMapper,
                          AiWearPromptService promptService,
                          AiImageGenerator imageGenerator,
                          @Value("${app.upload-dir:./uploads}") String uploadDir) {
         this.recordMapper = recordMapper;
+        this.showcaseMapper = showcaseMapper;
         this.userMapper = userMapper;
         this.levelMapper = levelMapper;
         this.productMapper = productMapper;
@@ -161,6 +166,18 @@ public class AiWearService {
         record.setResultUrl(newUrl);
         record.setShowOnDiscovery(1);
         recordMapper.updateById(record);
+
+        // Also insert into showcase table
+        UmsUser user = userMapper.selectById(record.getUserId());
+        AiWearShowcase sc = new AiWearShowcase();
+        sc.setImageUrl(newUrl);
+        sc.setTitle("");
+        sc.setTag("AI试戴");
+        sc.setUserId(record.getUserId());
+        sc.setNickname(user != null ? user.getNickname() : "");
+        sc.setSortOrder(0);
+        showcaseMapper.insert(sc);
+
         return newUrl;
     }
 
@@ -174,11 +191,11 @@ public class AiWearService {
         return recordMapper.selectList(wrapper);
     }
 
-    public List<AiWearRecord> getShowcase() {
-        return recordMapper.selectList(
-                new LambdaQueryWrapper<AiWearRecord>()
-                        .eq(AiWearRecord::getShowOnDiscovery, 1)
-                        .orderByDesc(AiWearRecord::getCreateTime));
+    public List<AiWearShowcase> getShowcase() {
+        return showcaseMapper.selectList(
+                new LambdaQueryWrapper<AiWearShowcase>()
+                        .orderByDesc(AiWearShowcase::getSortOrder)
+                        .orderByDesc(AiWearShowcase::getCreateTime));
     }
 
     private String getExt(String filename) {

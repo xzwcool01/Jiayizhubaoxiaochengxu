@@ -12,6 +12,12 @@ export interface AdminReviewVO {
   images: string[]
   isAnonymous: number
   isTop: number
+  showOnExpert: number
+  expertSortOrder: number
+  expertTag: string
+  expertLikes: number
+  isManual: number
+  expertNickname: string
   status: number
   totalAmount: number
   payAmount: number
@@ -32,10 +38,20 @@ export function getReview(id: number) {
   return request.get<any, { code: number; data: AdminReviewVO }>(`/admin/review/${id}`)
 }
 
-export function updateReview(id: number, data: { rating?: number; content?: string; isAnonymous?: number; isTop?: number; status?: number }) {
+export function updateReview(id: number, data: {
+  rating?: number; content?: string; isAnonymous?: number; isTop?: number;
+  showOnExpert?: number; expertSortOrder?: number; expertTag?: string; expertLikes?: number;
+  status?: number
+}) {
   return request.put<any, { code: number }>(`/admin/review/${id}`, data)
 }
 
 export function deleteReview(id: number) {
   return request.delete<any, { code: number }>(`/admin/review/${id}`)
+}
+
+export function createExpertPost(data: FormData) {
+  return request.post<any, { code: number; data: number }>('/admin/review/expert/create', data, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
 }

@@ -25,7 +25,9 @@ const routes: RouteRecordRaw[] = [
       { path: 'points', name: 'Points', component: () => import('@/views/points/index.vue'), meta: { title: '积分规则' } },
       { path: 'action-points', name: 'ActionPoints', component: () => import('@/views/action-points/index.vue'), meta: { title: '行为积分' } },
       { path: 'review', name: 'Review', component: () => import('@/views/review/index.vue'), meta: { title: '评价管理' } },
-      { path: 'address', name: 'Address', component: () => import('@/views/address/index.vue'), meta: { title: '地址管理' } }
+      { path: 'address', name: 'Address', component: () => import('@/views/address/index.vue'), meta: { title: '地址管理' } },
+      { path: 'ai-wear-showcase', name: 'AiWearShowcase', component: () => import('@/views/ai-wear-showcase/index.vue'), meta: { title: 'AI试戴展示' } },
+      { path: 'guide-article', name: 'GuideArticle', component: () => import('@/views/guide-article/index.vue'), meta: { title: '珠宝指南' } }
     ]
   }
 ]

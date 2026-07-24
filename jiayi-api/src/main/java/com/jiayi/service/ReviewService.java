@@ -206,15 +206,89 @@ public class ReviewService {
         return toAdminReviewVO(r, nameMap, prodNameMap, orderMap);
     }
 
-    public void adminUpdate(Long id, Integer rating, String content, Integer isAnonymous, Integer isTop, Integer status) {
+    public void adminUpdate(Long id, Integer rating, String content, Integer isAnonymous, Integer isTop,
+                             Integer showOnExpert, Integer expertSortOrder, String expertTag, Integer expertLikes,
+                             String expertNickname, Integer status) {
         OmsOrderReview r = reviewMapper.selectById(id);
         if (r == null) return;
         if (rating != null) r.setRating(rating);
         if (content != null) r.setContent(content);
         if (isAnonymous != null) r.setIsAnonymous(isAnonymous);
         if (isTop != null) r.setIsTop(isTop);
+        if (showOnExpert != null) r.setShowOnExpert(showOnExpert);
+        if (expertSortOrder != null) r.setExpertSortOrder(expertSortOrder);
+        if (expertTag != null) r.setExpertTag(expertTag);
+        if (expertLikes != null) r.setExpertLikes(expertLikes);
+        if (expertNickname != null) r.setExpertNickname(expertNickname);
         if (status != null) r.setStatus(status);
         reviewMapper.updateById(r);
+    }
+
+    @Transactional
+    public Long createManual(String content, String nickname, String tag, Integer likes, Integer sortOrder, List<String> imageUrls) {
+        OmsOrderReview r = new OmsOrderReview();
+        r.setContent(content != null ? content : "");
+        r.setIsManual(1);
+        r.setShowOnExpert(1);
+        r.setStatus(1);
+        r.setExpertNickname(nickname != null && !nickname.isBlank() ? nickname : "管理员");
+        r.setExpertTag(tag != null ? tag : "");
+        r.setExpertLikes(likes != null ? likes : 0);
+        r.setExpertSortOrder(sortOrder != null ? sortOrder : 0);
+        if (imageUrls != null && !imageUrls.isEmpty()) {
+            try {
+                r.setImages(objectMapper.writeValueAsString(imageUrls));
+            } catch (Exception e) {
+                r.setImages(null);
+            }
+        }
+        r.setOrderId(null);
+        r.setProductId(null);
+        r.setRating(5);
+        r.setUserId(0L);
+        reviewMapper.insert(r);
+        return r.getId();
+    }
+
+    public List<Map<String, Object>> getExpertPosts() {
+        List<OmsOrderReview> list = reviewMapper.selectList(
+                new LambdaQueryWrapper<OmsOrderReview>()
+                        .eq(OmsOrderReview::getShowOnExpert, 1)
+                        .eq(OmsOrderReview::getStatus, 1)
+                        .orderByDesc(OmsOrderReview::getExpertSortOrder)
+                        .orderByDesc(OmsOrderReview::getCreateTime));
+        Set<Long> uids = list.stream().map(OmsOrderReview::getUserId).filter(id -> id != null && id > 0).collect(Collectors.toSet());
+        Map<Long, UmsUser> userMap = uids.isEmpty() ? Map.of() : userMapper.selectBatchIds(uids).stream()
+                .collect(Collectors.toMap(UmsUser::getId, u -> u));
+        return list.stream().map(r -> toExpertPostMap(r, userMap)).collect(Collectors.toList());
+    }
+
+    public Map<String, Object> getExpertPostDetail(Long id) {
+        OmsOrderReview r = reviewMapper.selectById(id);
+        if (r == null || r.getShowOnExpert() != 1 || r.getStatus() != 1) return null;
+        Set<Long> uids = r.getUserId() != null && r.getUserId() > 0 ? Set.of(r.getUserId()) : Set.of();
+        Map<Long, UmsUser> userMap = uids.isEmpty() ? Map.of() : userMapper.selectBatchIds(uids).stream()
+                .collect(Collectors.toMap(UmsUser::getId, u -> u));
+        return toExpertPostMap(r, userMap);
+    }
+
+    private Map<String, Object> toExpertPostMap(OmsOrderReview r, Map<Long, UmsUser> userMap) {
+        Map<String, Object> m = new java.util.HashMap<>();
+        m.put("id", r.getId());
+        m.put("content", r.getContent());
+        m.put("images", parseImages(r.getImages()));
+        m.put("expertTag", r.getExpertTag() != null ? r.getExpertTag() : "");
+        m.put("expertLikes", r.getExpertLikes() != null ? r.getExpertLikes() : 0);
+        m.put("createTime", r.getCreateTime());
+        if (r.getIsManual() == 1) {
+            m.put("nickname", r.getExpertNickname() != null && !r.getExpertNickname().isBlank() ? r.getExpertNickname() : "管理员");
+            m.put("avatar", "");
+        } else {
+            UmsUser user = userMap.get(r.getUserId());
+            m.put("nickname", user != null ? (user.getNickname() != null ? user.getNickname() : "") : "");
+            m.put("avatar", user != null ? (user.getAvatar() != null ? user.getAvatar() : "") : "");
+        }
+        return m;
     }
 
     public void adminDelete(Long id) {
@@ -232,6 +306,11 @@ public class ReviewService {
         vo.setImages(parseImages(r.getImages()));
         vo.setIsAnonymous(r.getIsAnonymous());
         vo.setIsTop(r.getIsTop());
+        vo.setShowOnExpert(r.getShowOnExpert());
+        vo.setExpertSortOrder(r.getExpertSortOrder());
+        vo.setExpertTag(r.getExpertTag());
+        vo.setExpertLikes(r.getExpertLikes());
+        vo.setExpertNickname(r.getExpertNickname());
         vo.setStatus(r.getStatus());
         vo.setCreateTime(r.getCreateTime());
         return vo;
@@ -251,6 +330,12 @@ public class ReviewService {
         vo.setImages(parseImages(r.getImages()));
         vo.setIsAnonymous(r.getIsAnonymous());
         vo.setIsTop(r.getIsTop());
+        vo.setShowOnExpert(r.getShowOnExpert());
+        vo.setExpertSortOrder(r.getExpertSortOrder());
+        vo.setExpertTag(r.getExpertTag());
+        vo.setExpertLikes(r.getExpertLikes());
+        vo.setIsManual(r.getIsManual());
+        vo.setExpertNickname(r.getExpertNickname());
         vo.setStatus(r.getStatus());
         vo.setCreateTime(r.getCreateTime());
         OmsOrder order = orderMap.get(r.getOrderId());

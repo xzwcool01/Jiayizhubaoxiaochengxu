@@ -259,8 +259,8 @@ CREATE TABLE IF NOT EXISTS oms_order_delivery (
 -- 评价表
 CREATE TABLE IF NOT EXISTS oms_order_review (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    order_id BIGINT NOT NULL COMMENT '关联订单',
-    product_id BIGINT NOT NULL COMMENT '关联商品',
+    order_id BIGINT COMMENT '关联订单',
+    product_id BIGINT COMMENT '关联商品',
     user_id BIGINT NOT NULL COMMENT '关联用户',
     rating TINYINT NOT NULL COMMENT '评分1-5',
     content VARCHAR(500) DEFAULT '' COMMENT '评价内容',
@@ -307,6 +307,15 @@ ALTER TABLE ums_level ADD COLUMN perks TEXT COMMENT '权益列表JSON数组';
 ALTER TABLE ums_level ADD COLUMN icon VARCHAR(500) COMMENT '图标';
 ALTER TABLE ums_level ADD COLUMN ai_wear_limit INT DEFAULT 10 COMMENT 'AI试戴每日限额';
 
+ALTER TABLE oms_order_review ADD COLUMN show_on_expert TINYINT DEFAULT 0 COMMENT '是否在达人晒单展示' AFTER is_top;
+ALTER TABLE oms_order_review ADD COLUMN expert_sort_order INT DEFAULT 0 COMMENT '达人晒单排序' AFTER show_on_expert;
+ALTER TABLE oms_order_review ADD COLUMN expert_tag VARCHAR(100) DEFAULT '' COMMENT '晒单标签' AFTER expert_sort_order;
+ALTER TABLE oms_order_review ADD COLUMN expert_likes INT DEFAULT 0 COMMENT '晒单点赞数' AFTER expert_tag;
+ALTER TABLE oms_order_review ADD COLUMN is_manual TINYINT DEFAULT 0 COMMENT '是否手动新增' AFTER expert_likes;
+ALTER TABLE oms_order_review ADD COLUMN expert_nickname VARCHAR(100) DEFAULT '' COMMENT '晒单用户昵称' AFTER is_manual;
+ALTER TABLE oms_order_review MODIFY COLUMN order_id BIGINT COMMENT '关联订单';
+ALTER TABLE oms_order_review MODIFY COLUMN product_id BIGINT COMMENT '关联商品';
+
 -- AI穿戴记录表
 CREATE TABLE IF NOT EXISTS ai_wear_record (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -332,3 +341,33 @@ CREATE TABLE IF NOT EXISTS ai_wear_prompt (
 
 ALTER TABLE ai_wear_record ADD COLUMN category_id BIGINT COMMENT '商品分类ID' AFTER product_id;
 ALTER TABLE ai_wear_record ADD COLUMN show_on_discovery TINYINT DEFAULT 0 COMMENT '是否在发现页展示' AFTER style;
+
+-- AI试戴展示表（发现页统一数据源）
+-- 珠宝指南文章表
+CREATE TABLE IF NOT EXISTS cms_guide_article (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL COMMENT '标题',
+    summary VARCHAR(500) DEFAULT '' COMMENT '摘要',
+    cover_image VARCHAR(500) DEFAULT '' COMMENT '封面图URL',
+    content LONGTEXT COMMENT '文章内容(富文本HTML)',
+    views INT DEFAULT 0 COMMENT '浏览量',
+    author VARCHAR(100) DEFAULT '' COMMENT '作者',
+    publish_date DATE DEFAULT NULL COMMENT '发布日期',
+    is_hero TINYINT DEFAULT 0 COMMENT '1=深度专题(大卡) 0=普通文章(图文小卡)',
+    status TINYINT DEFAULT 1 COMMENT '0=草稿 1=已发布',
+    sort_order INT DEFAULT 0 COMMENT '排序序号',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS ai_wear_showcase (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    image_url VARCHAR(500) NOT NULL COMMENT '展示图片URL',
+    title VARCHAR(200) DEFAULT '' COMMENT '展示标题',
+    tag VARCHAR(100) DEFAULT 'AI生成' COMMENT '标签文字',
+    user_id BIGINT COMMENT '用户ID（为空表示管理员添加）',
+    nickname VARCHAR(100) DEFAULT '' COMMENT '用户昵称',
+    sort_order INT DEFAULT 0 COMMENT '排序序号（越小越靠前）',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_sort (sort_order, create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

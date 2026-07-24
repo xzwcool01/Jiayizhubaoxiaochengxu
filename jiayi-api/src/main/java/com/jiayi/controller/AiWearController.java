@@ -2,6 +2,7 @@ package com.jiayi.controller;
 
 import com.jiayi.common.R;
 import com.jiayi.entity.AiWearRecord;
+import com.jiayi.entity.AiWearShowcase;
 import com.jiayi.entity.UmsUser;
 import com.jiayi.mapper.UmsUserMapper;
 import com.jiayi.service.AiWearService;
@@ -102,7 +103,7 @@ public class AiWearController {
     }
 
     @GetMapping("/showcase")
-    public R<List<AiWearRecord>> showcase() {
+    public R<List<AiWearShowcase>> showcase() {
         return R.ok(aiWearService.getShowcase());
     }
 }

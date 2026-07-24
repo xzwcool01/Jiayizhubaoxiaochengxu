@@ -15,6 +15,11 @@ public class ReviewVO {
     private List<String> images;
     private Integer isAnonymous;
     private Integer isTop;
+    private Integer showOnExpert;
+    private Integer expertSortOrder;
+    private String expertTag;
+    private Integer expertLikes;
+    private String expertNickname;
     private Integer status;
     private LocalDateTime createTime;
     private String nickname;
